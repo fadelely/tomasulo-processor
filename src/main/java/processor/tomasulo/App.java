@@ -1,5 +1,7 @@
 package processor.tomasulo;
 
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -19,8 +21,10 @@ public class App extends Application {
         stage.show();
     }
 
-    public static void main(String[] args) {
-        launch();
+    public static void main(String[] args) throws IOException {
+//        launch();
+    	ParseText test = new ParseText();
+    	test.parseTextFile();
     }
 
 }
