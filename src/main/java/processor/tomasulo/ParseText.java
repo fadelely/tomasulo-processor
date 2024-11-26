@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class ParseText {
-	static RegisterFile RegisterFile = new RegisterFile();
+	static RegisterFile registerFile = new RegisterFile();
 	static Memory memory = new Memory();
 
 	void parseTextFile() throws IOException {
@@ -18,7 +18,7 @@ public class ParseText {
 		while ((str = br.readLine()) != null) {
 			RegisterFile.floatingRegisters[2] = 5.2;
 			RegisterFile.floatingRegisters[3] = 5.2;
-			String regex = " ";
+			String regex = ",";
 			String[] parsedInstruction = str.split(regex);
 			String R1 = parsedInstruction[1]; // string as this is where we will save our result
 			double R2 = RegisterFile.readRegister(parsedInstruction[2]);
@@ -76,9 +76,11 @@ public class ParseText {
 
 	void addFloating(String F1, double F2, double F3, boolean single) {
 		if (single) {
+			System.out.println("Adding single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 + F3);
 			RegisterFile.writeRegister(F1, result);
 		} else {
+			System.out.println("Adding double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 + F3;
 			RegisterFile.writeRegister(F1, result);
 		}
@@ -86,9 +88,11 @@ public class ParseText {
 
 	void subtractFloating(String F1, double F2, double F3, boolean single) {
 		if (single) {
+			System.out.println("Subtracting single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 - F3);
 			RegisterFile.writeRegister(F1, result);
 		} else {
+			System.out.println("Subtracting double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 - F3;
 			RegisterFile.writeRegister(F1, result);
 		}
@@ -96,9 +100,11 @@ public class ParseText {
 
 	void multiplyFloating(String F1, double F2, double F3, boolean single) {
 		if (single) {
+			System.out.println("Multiplying single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 * F3);
 			RegisterFile.writeRegister(F1, result);
 		} else {
+			System.out.println("Multiplying double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 * F3;
 			RegisterFile.writeRegister(F1, result);
 		}
@@ -106,9 +112,11 @@ public class ParseText {
 
 	void divideFloating(String F1, double F2, double F3, boolean single) {
 		if (single) {
+			System.out.println("Dividing single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 / F3);
 			RegisterFile.writeRegister(F1, result);
 		} else {
+			System.out.println("Dividing double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 / F3;
 			RegisterFile.writeRegister(F1, result);
 		}
