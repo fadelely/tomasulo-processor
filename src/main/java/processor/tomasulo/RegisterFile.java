@@ -29,10 +29,10 @@ public class RegisterFile {
 		int registerNumber = register.charAt(1) - '0';
 		switch (register.charAt(0)) {
 		case 'R':
-			System.out.println("Writing value " + value + " onto register" + register);
+			System.out.println("Writing value " + value + " onto register " + register);
 			RegisterFile.integerRegisters[registerNumber] = (long) value;
 		case 'F':
-			System.out.println("Writing value " + value + " onto register" + register);
+			System.out.println("Writing value " + value + " onto register " + register);
 			RegisterFile.floatingRegisters[registerNumber] = value;
 		}
 

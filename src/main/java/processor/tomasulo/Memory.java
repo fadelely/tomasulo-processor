@@ -6,7 +6,7 @@ import java.nio.ByteOrder;
 public class Memory {
 	static byte[] addresses = new byte[128];
 
-	int loadWord(int address, String register) {
+	public static int loadWord(int address) {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
@@ -21,7 +21,7 @@ public class Memory {
 		return word;
 	}
 
-	long loadDoubleWord(int address, String register) {
+	public static double loadDoubleWord(int address) {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
@@ -44,7 +44,7 @@ public class Memory {
 		return doubleWord;
 	}
 
-	void storeWord(int address, int registerValue) {
+	public static void storeWord(int address, int registerValue) {
 		// xFF means the LSB are all 1s, and anything after that is 0
 		Memory.addresses[address] = (byte) (registerValue & 0xFF);
 		Memory.addresses[address + 1] = (byte) ((registerValue >> 8) & 0xFF);
@@ -52,7 +52,7 @@ public class Memory {
 		Memory.addresses[address + 3] = (byte) ((registerValue >> 24) & 0xFF);
 	}
 
-	void storeDoubleWord(int address, long registerValue) {
+	public static void storeDoubleWord(int address, long registerValue) {
 		// xFF means the LSB are all 1s, and anything after that is 0
 		Memory.addresses[address] = (byte) (registerValue & 0xFF);
 		Memory.addresses[address + 1] = (byte) ((registerValue >> 8) & 0xFF);
