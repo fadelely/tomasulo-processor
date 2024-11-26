@@ -12,11 +12,11 @@ public class ParseText {
 	static Memory memory = new Memory();
 
 	void parseTextFile() throws IOException {
-		RegisterFile.integerRegisters [2]= -923274;
-		storeWord(0, "R2", true);
-		loadWord(0, "R3", true);
+		RegisterFile.integerRegisters[2] = Long.MIN_VALUE;
+		storeWord(0, "R2", false);
+		loadWord(0, "R3", false);
 		System.out.println("R3 is " + readRegister("R3"));
-		for(int i = 0;i< 5;i++)
+		for (int i = 0; i < 8; i++)
 			System.out.println("Memory " + i + " is " + Memory.addresses[i]);
 
 		File instructions = new File("./resources/instructions.txt");
@@ -83,23 +83,23 @@ public class ParseText {
 		int registerNumber = register.charAt(1) - '0';
 		switch (register.charAt(0)) {
 		case 'R':
-			return RegisterFile.integerRegisters[registerNumber];
+			return (long) RegisterFile.integerRegisters[registerNumber];
 		case 'F':
 			return RegisterFile.floatingRegisters[registerNumber];
 		}
-		return -1;
+		return -2;
 
 	}
-	void writeRegister(String register, double value)
-	{
+
+	void writeRegister(String register, double value) {
 		int registerNumber = register.charAt(1) - '0';
 		switch (register.charAt(0)) {
 		case 'R':
-			RegisterFile.integerRegisters[registerNumber] = (int)value;
+			RegisterFile.integerRegisters[registerNumber] = (long) value;
 		case 'F':
 			RegisterFile.floatingRegisters[registerNumber] = value;
 		}
-		
+
 	}
 
 	void addFloating(int R1, double R2, double R3, boolean single) {
@@ -119,35 +119,48 @@ public class ParseText {
 	}
 
 	void loadWord(int address, String register, boolean single) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+		ByteBuffer byteBuffer = ByteBuffer.allocate(10);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
-		byte secondByte = Memory.addresses[address + 1] ;
+		byte secondByte = Memory.addresses[address + 1];
 		byte thirdByte = Memory.addresses[address + 2];
 		byte fourthByte = Memory.addresses[address + 3];
 		byteBuffer.put(firstByte);
 		byteBuffer.put(secondByte);
 		byteBuffer.put(thirdByte);
 		byteBuffer.put(fourthByte);
-		int word = byteBuffer.getInt(0);
-
-		writeRegister(register, word);
-		if (!single) {
-			byte fifthByte = Memory.addresses[address + 4];
-			byte sixthByte = Memory.addresses[address + 5];
-			byte seventhByte = Memory.addresses[address + 6];
-			byte eighthByte = Memory.addresses[address + 7];
+		if (single) {
+			int word = byteBuffer.getInt(0);
+			writeRegister(register, word);
+			return;
 		}
+
+		byte fifthByte = Memory.addresses[address + 4];
+		byte sixthByte = Memory.addresses[address + 5];
+		byte seventhByte = Memory.addresses[address + 6];
+		byte eighthByte = Memory.addresses[address + 7];
+		byteBuffer.put(fifthByte);
+		byteBuffer.put(sixthByte);
+		byteBuffer.put(seventhByte);
+		byteBuffer.put(eighthByte);
+		long doubleWord = byteBuffer.getLong(0);
+		writeRegister(register, doubleWord);
 	}
-	
-	void storeWord(int address, String register, boolean single)
-	{
-		int registerValue = (int)readRegister(register);
+
+	void storeWord(int address, String register, boolean single) {
+		long registerValue = (long) readRegister(register);
 		// xFF means the LSB are all 1s, and anything after that is 0
-		Memory.addresses[address] = (byte) (registerValue  & 0xFF);
+		Memory.addresses[address] = (byte) (registerValue & 0xFF);
 		Memory.addresses[address + 1] = (byte) ((registerValue >> 8) & 0xFF);
 		Memory.addresses[address + 2] = (byte) ((registerValue >> 16) & 0xFF);
 		Memory.addresses[address + 3] = (byte) ((registerValue >> 24) & 0xFF);
+		if (single)
+			return;
+		Memory.addresses[address + 4] = (byte) ((registerValue >> 32) & 0xFF);
+		Memory.addresses[address + 5] = (byte) ((registerValue >> 40) & 0xFF);
+		Memory.addresses[address + 6] = (byte) ((registerValue >> 48) & 0xFF);
+		Memory.addresses[address + 7] = (byte) ((registerValue >> 56) & 0xFF);
+
 	}
 
 }
