@@ -2,7 +2,7 @@ package processor.tomasulo;
 
 public class RegisterFile {
 	double floatingRegisters[];
-	int integerRegisters[];
+	long integerRegisters[];
 	public RegisterFile()
 	{
 		floatingRegisters = new double[32];
