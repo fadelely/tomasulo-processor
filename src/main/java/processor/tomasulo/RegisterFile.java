@@ -6,6 +6,6 @@ public class RegisterFile {
 	public RegisterFile()
 	{
 		floatingRegisters = new double[32];
-		integerRegisters = new int[32];
+		integerRegisters = new long[32];
 	}
 }
