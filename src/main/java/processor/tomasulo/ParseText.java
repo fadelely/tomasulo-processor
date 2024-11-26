@@ -12,13 +12,6 @@ public class ParseText {
 	static Memory memory = new Memory();
 
 	void parseTextFile() throws IOException {
-		RegisterFile.integerRegisters[2] = Long.MIN_VALUE;
-		storeWord(0, "R2", false);
-		loadWord(0, "R3", false);
-		System.out.println("R3 is " + readRegister("R3"));
-		for (int i = 0; i < 8; i++)
-			System.out.println("Memory " + i + " is " + Memory.addresses[i]);
-
 		File instructions = new File("./resources/instructions.txt");
 		BufferedReader br = new BufferedReader(new FileReader(instructions));
 		String str;
@@ -27,9 +20,9 @@ public class ParseText {
 			RegisterFile.floatingRegisters[3] = 5.2;
 			String regex = " ";
 			String[] parsedInstruction = str.split(regex);
-			int R1 = (int) readRegister(parsedInstruction[1]);
-			double R2 = readRegister(parsedInstruction[2]);
-			double R3 = readRegister(parsedInstruction[3]);
+			String R1 = parsedInstruction[1]; // string as this is where we will save our result
+			double R2 = RegisterFile.readRegister(parsedInstruction[2]);
+			double R3 = RegisterFile.readRegister(parsedInstruction[3]);
 			switch (parsedInstruction[0]) {
 			case "ADD.D":
 				addFloating(R1, R2, R3, false);
@@ -77,90 +70,48 @@ public class ParseText {
 			}
 
 		}
+		br.close();
 	}
 
-	double readRegister(String register) {
-		int registerNumber = register.charAt(1) - '0';
-		switch (register.charAt(0)) {
-		case 'R':
-			return (long) RegisterFile.integerRegisters[registerNumber];
-		case 'F':
-			return RegisterFile.floatingRegisters[registerNumber];
-		}
-		return -2;
 
-	}
-
-	void writeRegister(String register, double value) {
-		int registerNumber = register.charAt(1) - '0';
-		switch (register.charAt(0)) {
-		case 'R':
-			RegisterFile.integerRegisters[registerNumber] = (long) value;
-		case 'F':
-			RegisterFile.floatingRegisters[registerNumber] = value;
-		}
-
-	}
-
-	void addFloating(int R1, double R2, double R3, boolean single) {
-		RegisterFile.floatingRegisters[R1] = R2 + R3;
-	}
-
-	void subtractFloating(int R1, double R2, double R3, boolean single) {
-		RegisterFile.floatingRegisters[R1] = R2 - R3;
-	}
-
-	void multiplyFloating(int R1, double R2, double R3, boolean single) {
-		RegisterFile.floatingRegisters[R1] = R2 * R3;
-	}
-
-	void divideFloating(int R1, double R2, double R3, boolean single) {
-		RegisterFile.floatingRegisters[R1] = R2 / R3;
-	}
-
-	void loadWord(int address, String register, boolean single) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(10);
-		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-		byte firstByte = Memory.addresses[address];
-		byte secondByte = Memory.addresses[address + 1];
-		byte thirdByte = Memory.addresses[address + 2];
-		byte fourthByte = Memory.addresses[address + 3];
-		byteBuffer.put(firstByte);
-		byteBuffer.put(secondByte);
-		byteBuffer.put(thirdByte);
-		byteBuffer.put(fourthByte);
+	void addFloating(String F1, double F2, double F3, boolean single) {
 		if (single) {
-			int word = byteBuffer.getInt(0);
-			writeRegister(register, word);
-			return;
+			float result = (float) (F2 + F3);
+			RegisterFile.writeRegister(F1, result);
+		} else {
+			double result = F2 + F3;
+			RegisterFile.writeRegister(F1, result);
 		}
-
-		byte fifthByte = Memory.addresses[address + 4];
-		byte sixthByte = Memory.addresses[address + 5];
-		byte seventhByte = Memory.addresses[address + 6];
-		byte eighthByte = Memory.addresses[address + 7];
-		byteBuffer.put(fifthByte);
-		byteBuffer.put(sixthByte);
-		byteBuffer.put(seventhByte);
-		byteBuffer.put(eighthByte);
-		long doubleWord = byteBuffer.getLong(0);
-		writeRegister(register, doubleWord);
 	}
 
-	void storeWord(int address, String register, boolean single) {
-		long registerValue = (long) readRegister(register);
-		// xFF means the LSB are all 1s, and anything after that is 0
-		Memory.addresses[address] = (byte) (registerValue & 0xFF);
-		Memory.addresses[address + 1] = (byte) ((registerValue >> 8) & 0xFF);
-		Memory.addresses[address + 2] = (byte) ((registerValue >> 16) & 0xFF);
-		Memory.addresses[address + 3] = (byte) ((registerValue >> 24) & 0xFF);
-		if (single)
-			return;
-		Memory.addresses[address + 4] = (byte) ((registerValue >> 32) & 0xFF);
-		Memory.addresses[address + 5] = (byte) ((registerValue >> 40) & 0xFF);
-		Memory.addresses[address + 6] = (byte) ((registerValue >> 48) & 0xFF);
-		Memory.addresses[address + 7] = (byte) ((registerValue >> 56) & 0xFF);
+	void subtractFloating(String F1, double F2, double F3, boolean single) {
+		if (single) {
+			float result = (float) (F2 - F3);
+			RegisterFile.writeRegister(F1, result);
+		} else {
+			double result = F2 - F3;
+			RegisterFile.writeRegister(F1, result);
+		}
+	}
 
+	void multiplyFloating(String F1, double F2, double F3, boolean single) {
+		if (single) {
+			float result = (float) (F2 * F3);
+			RegisterFile.writeRegister(F1, result);
+		} else {
+			double result = F2 * F3;
+			RegisterFile.writeRegister(F1, result);
+		}
+	}
+
+	void divideFloating(String F1, double F2, double F3, boolean single) {
+		if (single) {
+			float result = (float) (F2 / F3);
+			RegisterFile.writeRegister(F1, result);
+		} else {
+			double result = F2 / F3;
+			RegisterFile.writeRegister(F1, result);
+		}
 	}
 
 }
