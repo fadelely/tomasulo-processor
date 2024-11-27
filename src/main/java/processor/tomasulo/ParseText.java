@@ -60,7 +60,7 @@ public class ParseText {
 				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
 				switch (OPCode) {
 				case "L.S":
-					float wordValue  = Memory.loadWord(memoryAddress);
+					float wordValue  = Memory.loadSingle(memoryAddress);
 					RegisterFile.writeRegister(R1, wordValue );
 					break;
 				case "LW":
@@ -68,7 +68,7 @@ public class ParseText {
 					RegisterFile.writeRegister(R1, integerWordValue);
 					break;
 				case "L.D":
-					double doubleWordValue = Memory.loadDoubleWord(memoryAddress);
+					double doubleWordValue = Memory.loadDouble(memoryAddress);
 					RegisterFile.writeRegister(R1, doubleWordValue);
 					break;
 				case "LD":

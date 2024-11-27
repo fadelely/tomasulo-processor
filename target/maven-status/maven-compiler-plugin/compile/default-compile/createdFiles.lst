@@ -1,0 +1,6 @@
+processor/tomasulo/ParseText.class
+processor/tomasulo/App.class
+module-info.class
+processor/tomasulo/Memory.class
+processor/tomasulo/RegisterFile.class
+processor/tomasulo/SystemInfo.class
