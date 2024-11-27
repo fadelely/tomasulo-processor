@@ -91,6 +91,15 @@ public class Memory {
 		Memory.addresses[address + 3] = (byte) ((registerValue >> 24) & 0xFF);
 	}
 
+	public static void storeSingle(int address, float registerValue) {
+		// xFF means the LSB are all 1s, and anything after that is 0
+		int iee = Float.floatToIntBits(registerValue);
+		Memory.addresses[address] = (byte) (iee & 0xFF);
+		Memory.addresses[address + 1] = (byte) ((iee >> 8) & 0xFF);
+		Memory.addresses[address + 2] = (byte) ((iee >> 16) & 0xFF);
+		Memory.addresses[address + 3] = (byte) ((iee >> 24) & 0xFF);
+	}
+
 	public static void storeDoubleWord(int address, long registerValue) {
 		// xFF means the LSB are all 1s, and anything after that is 0
 		Memory.addresses[address] = (byte) (registerValue & 0xFF);

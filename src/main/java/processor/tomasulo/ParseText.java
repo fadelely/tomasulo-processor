@@ -14,8 +14,8 @@ public class ParseText {
 	static Memory memory = new Memory();
 
 	void parseTextFile() throws IOException {
-		Memory.storeWord(0, 5000);
-		Memory.storeWord(4, 5000);
+		Memory.storeSingle(0,(float) 2.56);
+		Memory.storeSingle(4, (float) 2.48);
 		File instructions = new File("./resources/instructions.txt");
 		BufferedReader br = new BufferedReader(new FileReader(instructions));
 		String str;
