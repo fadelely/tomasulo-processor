@@ -55,16 +55,16 @@ public class ParseText {
 
 	}
 
-	boolean isMemoryOperation(String opcode) {
+	boolean isLoadOperation(String opcode) {
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("LD");
 		possibleOperations.add("LW");
 		possibleOperations.add("L.D");
 		possibleOperations.add("L.S");
-		possibleOperations.add("SD");
-		possibleOperations.add("SW");
-		possibleOperations.add("S.D");
-		possibleOperations.add("S.S");
+//		possibleOperations.add("SD");
+//		possibleOperations.add("SW");
+//		possibleOperations.add("S.D");
+//		possibleOperations.add("S.S");
 		return possibleOperations.contains(opcode);
 
 	}

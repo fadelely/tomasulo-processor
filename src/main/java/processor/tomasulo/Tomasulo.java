@@ -235,32 +235,51 @@ public class Tomasulo {
 				}
 
 			}
-//			else if (isMemoryOperation(OPCode)) {
-//				// logically, it should be long, since the memory is 64 bits, but a limitation
-//				// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
-//				// int only,
-//				String R1 = parsedInstruction[1]; // string as this is where we will save our result
-//				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
-//				switch (OPCode) {
-//				case "L.S":
-//					float wordValue = Memory.loadSingle(memoryAddress);
-//					// this weird hack is because precision gets fucked during conversion from float
-//					// to double techincally gets more precise, but still is not something we wanted
-//					double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
-//					RegisterFile.writeRegister(R1, convertedWordValue);
-//					break;
-//				case "LW":
-//					float integerWordValue = Memory.loadWord(memoryAddress);
-//					RegisterFile.writeRegister(R1, integerWordValue);
-//					break;
-//				case "L.D":
-//					double doubleWordValue = Memory.loadDouble(memoryAddress);
-//					RegisterFile.writeRegister(R1, doubleWordValue);
-//					break;
-//				case "LD":
-//					double integerDoubleWordValue = Memory.loadDoubleWord(memoryAddress);
-//					RegisterFile.writeRegister(R1, integerDoubleWordValue);
-//					break;
+			else if (parseText.isLoadOperation(OPCode)) {
+				// logically, it should be long, since the memory is 64 bits, but a limitation
+				// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
+				// int only,
+				LoadBuffer freeLoadBuffer= null;
+				for (LoadBuffer loadBuffer : loadBuffers)
+					if (loadBuffer.busy == false) {
+						freeLoadBuffer = loadBuffer;
+						break;
+					}
+
+				if (freeLoadBuffer == null) {
+					System.out.println("Load buffers are full, stalling...");
+					i--;
+					stalled = true;
+					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+				}
+
+				String R1 = parsedInstruction[1]; // string as this is where we will save our result
+				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
+
+				freeLoadBuffer.busy = true;
+				freeLoadBuffer.address =  memoryAddress;
+				switch (OPCode) {
+				case "L.S":
+					float wordValue = Memory.loadSingle(freeLoadBuffer.address);
+					// this weird hack is because precision gets fucked during conversion from float
+					// to double techincally gets more precise, but still is not something we wanted
+					double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
+					RegisterFile.writeRegister(R1, convertedWordValue, freeLoadBuffer.tag);
+					break;
+				case "LW":
+					int integerWordValue = Memory.loadWord(freeLoadBuffer.address);
+					RegisterFile.writeRegister(R1, integerWordValue, freeLoadBuffer.tag);
+					break;
+				case "L.D":
+					double doubleWordValue = Memory.loadDouble(freeLoadBuffer.address);
+					RegisterFile.writeRegister(R1, doubleWordValue, freeLoadBuffer.tag);
+					break;
+				case "LD":
+					double integerDoubleWordValue = Memory.loadDoubleWord(freeLoadBuffer.address);
+					RegisterFile.writeRegister(R1, integerDoubleWordValue, freeLoadBuffer.tag);
+					break;
+				}
+			}
 //				case "SW":
 //					int registerValue = (int) RegisterFile.readRegister(R1);
 //					Memory.storeWord(memoryAddress, registerValue);
@@ -277,8 +296,7 @@ public class Tomasulo {
 //					double doubleRegisterValue = (double) RegisterFile.readRegister(R1);
 //					Memory.storeDouble(memoryAddress, doubleRegisterValue);
 //					break;
-//
-//				}
+
 //
 //			} else {
 //				long R1 = (long) RegisterFile.readRegister(parsedInstruction[1]);
