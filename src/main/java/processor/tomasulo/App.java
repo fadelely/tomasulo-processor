@@ -23,8 +23,8 @@ public class App extends Application{
 
     public static void main(String[] args) throws IOException {
 //        launch();
-    	ParseText test = new ParseText();
-    	test.parseTextFile();
+    	Tomasulo tomasolu = new Tomasulo();
+    	tomasolu.startExecution();
     }
 
 }

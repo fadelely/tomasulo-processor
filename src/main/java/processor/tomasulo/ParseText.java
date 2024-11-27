@@ -11,22 +11,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ParseText {
-	public static RegisterFile registerFile = new RegisterFile();
-	public static Memory memory = new Memory();
-	public static ALU alu = new ALU();
-	public static ArrayList<String> instructions = new ArrayList<String>();
 
-	void parseTextFile() throws IOException {
-		Memory.storeSingle(0, 2.56f);
-		Memory.storeSingle(4, -2.48f);
+	public ArrayList<String> parseTextFile() throws IOException {
 		File instructionList = new File("./resources/instructions.txt");
 		BufferedReader br = new BufferedReader(new FileReader(instructionList));
 		String str;
+		ArrayList<String> instructions = new ArrayList<String>(); // these are all the instructions, not yet executed :)
 		// puts all the instructions in an array, so we can branch easily later
 		while ((str = br.readLine()) != null) {
 			instructions.add(str);
 		}
 		br.close();
+		return instructions;
 
 //		for (int i = 0; i < instructions.size(); i++) {
 //			String regex = "[ ,]+";
