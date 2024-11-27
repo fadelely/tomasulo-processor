@@ -103,9 +103,7 @@ public class Tomasulo {
 				String OPCode = parsedInstruction[0];
 				if (parseText.isAdditionOperation(OPCode)) {
 					// check for empty addition stations, if none are avaliable, stall
-					ReservationStation freeReservationStation = null; // THIS IS NOT THE TAG BIT, this is where in the
-																		// array is the empty
-					// reservation station
+					ReservationStation freeReservationStation = null;
 					for (ReservationStation addReservationStation : addReservationStations)
 						if (addReservationStation.busy == false) {
 							freeReservationStation = addReservationStation;
@@ -126,39 +124,88 @@ public class Tomasulo {
 					FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
 					freeReservationStation.qj = F2.Qi; // if its 0, woo, if not, it saves it :)
 					freeReservationStation.qk = F3.Qi; // if its 0, woo, if not, it saves it :)
-					if(F2.Qi == 0)
+					if (F2.Qi == 0)
 						freeReservationStation.vj = F2.value;
-					if(F3.Qi == 0)
+					if (F3.Qi == 0)
 						freeReservationStation.vk = F3.value;
 
 					switch (OPCode) {
 					case "ADD.D":
-						ALU.addFloating(F1, freeReservationStation.vj, freeReservationStation.vk, false, freeReservationStation.tag);
+						ALU.addFloating(F1, freeReservationStation.vj, freeReservationStation.vk, false,
+								freeReservationStation.tag);
 						break;
 					case "SUB.D":
-						ALU.subtractFloating(F1, freeReservationStation.vj, freeReservationStation.vk, false, freeReservationStation.tag);
+						ALU.subtractFloating(F1, freeReservationStation.vj, freeReservationStation.vk, false,
+								freeReservationStation.tag);
 						break;
 					case "ADD.S":
-						ALU.addFloating(F1, freeReservationStation.vj, freeReservationStation.vk, true, freeReservationStation.tag);
+						ALU.addFloating(F1, freeReservationStation.vj, freeReservationStation.vk, true,
+								freeReservationStation.tag);
 						break;
 					case "SUB.S":
-						ALU.subtractFloating(F1, freeReservationStation.vj, freeReservationStation.vk, true, freeReservationStation.tag);
+						ALU.subtractFloating(F1, freeReservationStation.vj, freeReservationStation.vk, true,
+								freeReservationStation.tag);
 						break;
 					}
+				} else if (parseText.isMultiplyOperation(OPCode)) {
+					ReservationStation freeReservationStation = null;
+					for (ReservationStation multiplyReservationStation : multiplyReservationStations)
+						if (multiplyReservationStation.busy == false) {
+							freeReservationStation = multiplyReservationStation;
+							break;
+						}
+
+					if (freeReservationStation == null) {
+						System.out.println("Multiply stations are full, stalling...");
+						i--;
+						stalled = true;
+						continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+					}
+
+					freeReservationStation.busy = true;
+					freeReservationStation.opcode = OPCode;
+					String F1 = parsedInstruction[1]; // string as this is where we will save our result
+					FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+					FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+					freeReservationStation.qj = F2.Qi; // if its 0, woo, if not, it saves it :)
+					freeReservationStation.qk = F3.Qi; // if its 0, woo, if not, it saves it :)
+					if (F2.Qi == 0)
+						freeReservationStation.vj = F2.value;
+					if (F3.Qi == 0)
+						freeReservationStation.vk = F3.value;
+					switch (OPCode) {
+					case "MUL.D":
+						ALU.multiplyFloating(F1, freeReservationStation.vj, freeReservationStation.vk, false,
+								freeReservationStation.tag);
+						break;
+					case "DIV.D":
+						ALU.divideFloating(F1, freeReservationStation.vj, freeReservationStation.vk, false,
+								freeReservationStation.tag);
+						break;
+					case "MUL.S":
+						ALU.multiplyFloating(F1, freeReservationStation.vj, freeReservationStation.vk, true,
+								freeReservationStation.tag);
+						break;
+					case "DIV.S":
+						ALU.divideFloating(F1, freeReservationStation.vj, freeReservationStation.vk, true,
+								freeReservationStation.tag);
+						break;
+
+					}
+
 				}
-				
-//				case "MUL.D":
-//					ALU.multiplyFloating(F1, F2, F3, false);
+//			} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
+//				String R1 = parsedInstruction[1]; // string as this is where we will save our result
+//				long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
+//				short immediate = Short.valueOf(parsedInstruction[3]);
+//				switch (OPCode) {
+//				case "ADDI":
+//					ALU.addImmediate(R1, R2, immediate);
 //					break;
-//				case "DIV.D":
-//					ALU.divideFloating(F1, F2, F3, false);
+//				case "SUBI":
+//					ALU.subtractImmediate(R1, R2, immediate);
 //					break;
-//				case "MUL.S":
-//					ALU.multiplyFloating(F1, F2, F3, true);
-//					break;
-//				case "DIV.S":
-//					ALU.divideFloating(F1, F2, F3, true);
-//					break;
+//				}
 //			else if (isMemoryOperation(OPCode)) {
 //				// logically, it should be long, since the memory is 64 bits, but a limitation
 //				// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
@@ -204,18 +251,6 @@ public class Tomasulo {
 //
 //				}
 //
-//			} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
-//				String R1 = parsedInstruction[1]; // string as this is where we will save our result
-//				long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
-//				short immediate = Short.valueOf(parsedInstruction[3]);
-//				switch (OPCode) {
-//				case "ADDI":
-//					ALU.addImmediate(R1, R2, immediate);
-//					break;
-//				case "SUBI":
-//					ALU.subtractImmediate(R1, R2, immediate);
-//					break;
-//				}
 //			} else {
 //				long R1 = (long) RegisterFile.readRegister(parsedInstruction[1]);
 //				switch (OPCode) {

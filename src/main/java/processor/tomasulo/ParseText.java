@@ -26,8 +26,7 @@ public class ParseText {
 	}
 
 	// addition or subtraction really
-	boolean isAdditionOperation(String opcode)
-	{
+	boolean isAdditionOperation(String opcode) {
 		// why hashset one might ask
 		// malakash da3awa
 		Set<String> possibleOperations = new HashSet<String>();
@@ -42,8 +41,20 @@ public class ParseText {
 //		possibleOperations.add("DIV.D");
 //		possibleOperations.add("DIV.S");
 		return possibleOperations.contains(opcode);
-		
+
 	}
+
+	// division or multiplication
+	boolean isMultiplyOperation(String opcode) {
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("MUL.D");
+		possibleOperations.add("MUL.S");
+		possibleOperations.add("DIV.D");
+		possibleOperations.add("DIV.S");
+		return possibleOperations.contains(opcode);
+
+	}
+
 	boolean isMemoryOperation(String opcode) {
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("LD");
