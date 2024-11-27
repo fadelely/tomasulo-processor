@@ -24,7 +24,7 @@ public class Tomasulo {
 
 		boolean busy;
 		int tag;
-		int V;
+		double V;
 		int Q;
 		int address;
 
@@ -280,22 +280,60 @@ public class Tomasulo {
 					break;
 				}
 			}
-//				case "SW":
-//					int registerValue = (int) RegisterFile.readRegister(R1);
-//					Memory.storeWord(memoryAddress, registerValue);
-//					break;
-//				case "S.S":
-//					float floatRegisterValue = (float) RegisterFile.readRegister(R1);
-//					Memory.storeSingle(memoryAddress, floatRegisterValue);
-//					break;
-//				case "SD":
-//					long longRegisterValue = (long) RegisterFile.readRegister(R1);
-//					Memory.storeDoubleWord(memoryAddress, longRegisterValue);
-//					break;
-//				case "S.D":
-//					double doubleRegisterValue = (double) RegisterFile.readRegister(R1);
-//					Memory.storeDouble(memoryAddress, doubleRegisterValue);
-//					break;
+			else if (parseText.isStoreOperation(OPCode)) {
+				// logically, it should be long, since the memory is 64 bits, but a limitation
+				// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
+				// int only,
+				StoreBuffer freeStoreBuffer = null;
+				for (StoreBuffer storeBuffer: storeBuffers)
+					if (storeBuffer.busy == false) {
+						freeStoreBuffer  = storeBuffer;
+						break;
+					}
+
+				if (freeStoreBuffer  == null) {
+					System.out.println("Store buffers are full, stalling...");
+					i--;
+					stalled = true;
+					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+				}
+
+				String R1 = parsedInstruction[1]; // string as this is where we will save our result
+				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
+
+				freeStoreBuffer.busy = true;
+				freeStoreBuffer.address =  memoryAddress;
+				switch (OPCode) {
+				case "SW":
+					IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
+					freeStoreBuffer.Q = integerRegisterValue.Qi;
+					if(freeStoreBuffer.Q==0)
+						freeStoreBuffer.V = integerRegisterValue.value;
+					Memory.storeWord(freeStoreBuffer.address, (int) freeStoreBuffer.V);
+					break;
+				case "S.S":
+					FloatingRegister  floatRegister =  RegisterFile.readFloatRegister(R1);
+					freeStoreBuffer.Q = floatRegister.Qi;
+					if(freeStoreBuffer.Q==0)
+						freeStoreBuffer.V = floatRegister.value;
+					Memory.storeSingle(freeStoreBuffer.address, (float) freeStoreBuffer.V);
+					break;
+				case "SD":
+					IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
+					freeStoreBuffer.Q = longRegisterValue.Qi;
+					if(freeStoreBuffer.Q==0)
+						freeStoreBuffer.V = longRegisterValue.value;
+					Memory.storeDoubleWord(freeStoreBuffer.address, (long) freeStoreBuffer.V);
+					break;
+				case "S.D":
+					FloatingRegister doubleRegister =  RegisterFile.readFloatRegister(R1);
+					freeStoreBuffer.Q = doubleRegister.Qi;
+					if(freeStoreBuffer.Q==0)
+						freeStoreBuffer.V = doubleRegister.value;
+					Memory.storeDouble(freeStoreBuffer.address, freeStoreBuffer.V);
+					break;
+			}
+			}
 
 //
 //			} else {

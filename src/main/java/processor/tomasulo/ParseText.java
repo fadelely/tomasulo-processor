@@ -69,6 +69,16 @@ public class ParseText {
 
 	}
 
+	boolean isStoreOperation(String opcode) {
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("SD");
+		possibleOperations.add("SW");
+		possibleOperations.add("S.D");
+		possibleOperations.add("S.S");
+		return possibleOperations.contains(opcode);
+
+	}
+
 	boolean isALUOperation(String opcode) {
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("ADD.D");
