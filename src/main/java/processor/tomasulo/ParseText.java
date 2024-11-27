@@ -24,47 +24,50 @@ public class ParseText {
 			String regex = "[ ,]+";
 			String[] parsedInstruction = str.split(regex);
 			String OPCode = parsedInstruction[0];
-			String R1 = parsedInstruction[1]; // string as this is where we will save our result
 			if (isALUOperation(OPCode)) {
-				double R2 = RegisterFile.readRegister(parsedInstruction[2]);
-				double R3 = RegisterFile.readRegister(parsedInstruction[3]);
+				String F1 = parsedInstruction[1]; // string as this is where we will save our result
+				double F2 = RegisterFile.readRegister(parsedInstruction[2]);
+				double F3 = RegisterFile.readRegister(parsedInstruction[3]);
 				switch (OPCode) {
 				case "ADD.D":
-					ALU.addFloating(R1, R2, R3, false);
+					ALU.addFloating(F1, F2, F3, false);
 					break;
 				case "SUB.D":
-					ALU.subtractFloating(R1, R2, R3, false);
+					ALU.subtractFloating(F1, F2, F3, false);
 					break;
 				case "MUL.D":
-					ALU.multiplyFloating(R1, R2, R3, false);
+					ALU.multiplyFloating(F1, F2, F3, false);
 					break;
 				case "DIV.D":
-					ALU.divideFloating(R1, R2, R3, false);
+					ALU.divideFloating(F1, F2, F3, false);
 					break;
 				case "ADD.S":
-					ALU.addFloating(R1, R2, R3, true);
+					ALU.addFloating(F1, F2, F3, true);
 					break;
 				case "SUB.S":
-					ALU.subtractFloating(R1, R2, R3, true);
+					ALU.subtractFloating(F1, F2, F3, true);
 					break;
 				case "MUL.S":
-					ALU.multiplyFloating(R1, R2, R3, true);
+					ALU.multiplyFloating(F1, F2, F3, true);
 					break;
 				case "DIV.S":
-					ALU.divideFloating(R1, R2, R3, true);
+					ALU.divideFloating(F1, F2, F3, true);
 					break;
 				}
 
 			} else if (isMemoryOperation(OPCode)) {
-				// logically, it should be long, since the memory is 64 bits, but a limitation of java
-				// is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only, 
+				// logically, it should be long, since the memory is 64 bits, but a limitation
+				// of java
+				// is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only,
+				String R1 = parsedInstruction[1]; // string as this is where we will save our result
 				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
 				switch (OPCode) {
 				case "L.S":
-					float wordValue  = Memory.loadSingle(memoryAddress);
-					// this weird hack is because precision gets fucked during conversion from float to double
+					float wordValue = Memory.loadSingle(memoryAddress);
+					// this weird hack is because precision gets fucked during conversion from float
+					// to double
 					// techincally gets more precise, but still is not something we wanted
-					double convertedWordValue =	Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
+					double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
 					RegisterFile.writeRegister(R1, convertedWordValue);
 					break;
 				case "LW":
@@ -95,25 +98,33 @@ public class ParseText {
 					double doubleRegisterValue = (double) RegisterFile.readRegister(R1);
 					Memory.storeDouble(memoryAddress, doubleRegisterValue);
 					break;
-					
+
 				}
 
+			} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
+				String R1 = parsedInstruction[1]; // string as this is where we will save our result
+				long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
+				short immediate = Short.valueOf(parsedInstruction[3]);
+				switch (OPCode) {
+				case "ADDI":
+					ALU.addImmediate(R1, R2, immediate);
+					break;
+				case "SUBI":
+					ALU.subtractImmediate(R1, R2, immediate);
+					break;
+				}
 			} else {
 				switch (OPCode) {
 				case "BNEQ":
 					break;
 				case "BEQZ":
 					break;
-				case "ADDI":
-					break;
-				case "SUBI":
-					break;
 				}
-			}
 
+			}
+			br.close();
+			System.out.println(RegisterFile.readRegister("F1"));
 		}
-		br.close();
-		System.out.println(RegisterFile.readRegister("F1"));
 	}
 
 	boolean isMemoryOperation(String opcode) {

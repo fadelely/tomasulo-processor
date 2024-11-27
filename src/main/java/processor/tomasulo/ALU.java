@@ -14,7 +14,7 @@ public class ALU {
 			System.out.println("Adding single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 + F3);
 			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
-			RegisterFile.writeRegister(F1, result);
+			RegisterFile.writeRegister(F1, convertedResult);
 		} else {
 			System.out.println("Adding double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 + F3;
@@ -61,4 +61,17 @@ public class ALU {
 		}
 	}
 
+	public static void addImmediate(String R1, long R2, short immediate)
+	{
+		System.out.println("Adding immediate " + immediate + " onto the value " + R2);
+		long result = R2 + immediate;
+		RegisterFile.writeRegister(R1, result);
+	}
+
+	public static void subtractImmediate(String R1, long R2, short immediate)
+	{
+		System.out.println("Subtracting immediate " + immediate + " onto the value " + R2);
+		long result = R2 - immediate;
+		RegisterFile.writeRegister(R1, result);
+	}
 }
