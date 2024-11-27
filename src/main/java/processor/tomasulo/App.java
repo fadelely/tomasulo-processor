@@ -22,7 +22,7 @@ public class App extends Application{
     }
 
     public static void main(String[] args) throws IOException {
-        launch();
+//        launch();
     	ParseText test = new ParseText();
     	test.parseTextFile();
     }

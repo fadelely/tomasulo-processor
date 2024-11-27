@@ -1,3 +1,4 @@
 L.S F2,0
 L.S F3,4
+S.S F4,4
 ADD.S F1,F2,F3

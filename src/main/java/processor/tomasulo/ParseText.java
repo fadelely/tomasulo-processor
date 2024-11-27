@@ -20,6 +20,7 @@ public class ParseText {
 		BufferedReader br = new BufferedReader(new FileReader(instructions));
 		String str;
 		while ((str = br.readLine()) != null) {
+		System.out.println("F3 is" + RegisterFile.floatingRegisters[3]);
 			String regex = "[ ,]+";
 			String[] parsedInstruction = str.split(regex);
 			String OPCode = parsedInstruction[0];
@@ -80,12 +81,16 @@ public class ParseText {
 					Memory.storeWord(memoryAddress, registerValue);
 					break;
 				case "S.S":
+					float floatRegisterValue = (float) RegisterFile.readRegister(R1);
+					Memory.storeSingle(memoryAddress, floatRegisterValue);
 					break;
 				case "SD":
 					long longRegisterValue = (long) RegisterFile.readRegister(R1);
 					Memory.storeDoubleWord(memoryAddress, longRegisterValue);
 					break;
 				case "S.D":
+					double doubleRegisterValue = (double) RegisterFile.readRegister(R1);
+					Memory.storeDouble(memoryAddress, doubleRegisterValue);
 					break;
 					
 				}

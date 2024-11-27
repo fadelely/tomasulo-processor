@@ -43,9 +43,8 @@ public class Memory {
 		long doubleWord = byteBuffer.getLong(0);
 		return doubleWord;
 	}
-	
-	public static float loadSingle(int address)
-	{
+
+	public static float loadSingle(int address) {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
@@ -82,7 +81,7 @@ public class Memory {
 		double doubleWord = byteBuffer.getDouble(0);
 		return doubleWord;
 	}
-		
+
 	public static void storeWord(int address, int registerValue) {
 		// xFF means the LSB are all 1s, and anything after that is 0
 		Memory.addresses[address] = (byte) (registerValue & 0xFF);
@@ -93,11 +92,11 @@ public class Memory {
 
 	public static void storeSingle(int address, float registerValue) {
 		// xFF means the LSB are all 1s, and anything after that is 0
-		int iee = Float.floatToIntBits(registerValue);
-		Memory.addresses[address] = (byte) (iee & 0xFF);
-		Memory.addresses[address + 1] = (byte) ((iee >> 8) & 0xFF);
-		Memory.addresses[address + 2] = (byte) ((iee >> 16) & 0xFF);
-		Memory.addresses[address + 3] = (byte) ((iee >> 24) & 0xFF);
+		int floatBits = Float.floatToIntBits(registerValue);
+		Memory.addresses[address] = (byte) (floatBits & 0xFF);
+		Memory.addresses[address + 1] = (byte) ((floatBits >> 8) & 0xFF);
+		Memory.addresses[address + 2] = (byte) ((floatBits >> 16) & 0xFF);
+		Memory.addresses[address + 3] = (byte) ((floatBits >> 24) & 0xFF);
 	}
 
 	public static void storeDoubleWord(int address, long registerValue) {
@@ -110,6 +109,20 @@ public class Memory {
 		Memory.addresses[address + 5] = (byte) ((registerValue >> 40) & 0xFF);
 		Memory.addresses[address + 6] = (byte) ((registerValue >> 48) & 0xFF);
 		Memory.addresses[address + 7] = (byte) ((registerValue >> 56) & 0xFF);
+
+	}
+
+	public static void storeDouble(int address, double registerValue) {
+		// xFF means the LSB are all 1s, and anything after that is 0
+		long doubleBits = Double.doubleToLongBits(registerValue);
+		Memory.addresses[address] = (byte) (doubleBits & 0xFF);
+		Memory.addresses[address + 1] = (byte) ((doubleBits >> 8) & 0xFF);
+		Memory.addresses[address + 2] = (byte) ((doubleBits >> 16) & 0xFF);
+		Memory.addresses[address + 3] = (byte) ((doubleBits >> 24) & 0xFF);
+		Memory.addresses[address + 4] = (byte) ((doubleBits >> 32) & 0xFF);
+		Memory.addresses[address + 5] = (byte) ((doubleBits >> 40) & 0xFF);
+		Memory.addresses[address + 6] = (byte) ((doubleBits >> 48) & 0xFF);
+		Memory.addresses[address + 7] = (byte) ((doubleBits >> 56) & 0xFF);
 
 	}
 }

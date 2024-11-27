@@ -22,8 +22,8 @@ public class RegisterFile {
 			return RegisterFile.floatingRegisters[registerNumber];
 		}
 		return -2;
-
 	}
+	
 
 	public static void writeRegister(String register, double value) {
 		int registerNumber = register.charAt(1) - '0';
