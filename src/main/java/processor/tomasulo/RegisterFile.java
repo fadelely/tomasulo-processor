@@ -21,7 +21,7 @@ public class RegisterFile {
 			System.out.println("Reading register " + register + ", value is: " + floatingRegisterValue);
 			return RegisterFile.floatingRegisters[registerNumber];
 		}
-		return -2;
+		return -1;
 	}
 	
 

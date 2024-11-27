@@ -18,11 +18,12 @@ public class Memory {
 		byteBuffer.put(thirdByte);
 		byteBuffer.put(fourthByte);
 		int word = byteBuffer.getInt(0);
+		System.out.println("Got the integer value " + word + " from memory.");
 		return word;
 	}
 
 	public static long loadDoubleWord(int address) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+		ByteBuffer byteBuffer = ByteBuffer.allocate(8);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
 		byte secondByte = Memory.addresses[address + 1];
@@ -41,6 +42,7 @@ public class Memory {
 		byteBuffer.put(seventhByte);
 		byteBuffer.put(eighthByte);
 		long doubleWord = byteBuffer.getLong(0);
+		System.out.println("Got the long value " + doubleWord + " from memory.");
 		return doubleWord;
 	}
 
@@ -56,11 +58,12 @@ public class Memory {
 		byteBuffer.put(thirdByte);
 		byteBuffer.put(fourthByte);
 		float word = byteBuffer.getFloat(0);
+		System.out.println("Got the float value " + word + " from memory.");
 		return word;
 	}
 
 	public static double loadDouble(int address) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+		ByteBuffer byteBuffer = ByteBuffer.allocate(8);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
 		byte secondByte = Memory.addresses[address + 1];
@@ -79,6 +82,7 @@ public class Memory {
 		byteBuffer.put(seventhByte);
 		byteBuffer.put(eighthByte);
 		double doubleWord = byteBuffer.getDouble(0);
+		System.out.println("Got the double value " + doubleWord + " from memory.");
 		return doubleWord;
 	}
 
@@ -88,6 +92,7 @@ public class Memory {
 		Memory.addresses[address + 1] = (byte) ((registerValue >> 8) & 0xFF);
 		Memory.addresses[address + 2] = (byte) ((registerValue >> 16) & 0xFF);
 		Memory.addresses[address + 3] = (byte) ((registerValue >> 24) & 0xFF);
+		System.out.println("Stored " + registerValue + " inside of address " + address);
 	}
 
 	public static void storeSingle(int address, float registerValue) {
@@ -97,6 +102,7 @@ public class Memory {
 		Memory.addresses[address + 1] = (byte) ((floatBits >> 8) & 0xFF);
 		Memory.addresses[address + 2] = (byte) ((floatBits >> 16) & 0xFF);
 		Memory.addresses[address + 3] = (byte) ((floatBits >> 24) & 0xFF);
+		System.out.println("Stored " + registerValue + " inside of address " + address);
 	}
 
 	public static void storeDoubleWord(int address, long registerValue) {
@@ -109,7 +115,7 @@ public class Memory {
 		Memory.addresses[address + 5] = (byte) ((registerValue >> 40) & 0xFF);
 		Memory.addresses[address + 6] = (byte) ((registerValue >> 48) & 0xFF);
 		Memory.addresses[address + 7] = (byte) ((registerValue >> 56) & 0xFF);
-
+		System.out.println("Stored " + registerValue + " inside of address " + address);
 	}
 
 	public static void storeDouble(int address, double registerValue) {
@@ -123,6 +129,7 @@ public class Memory {
 		Memory.addresses[address + 5] = (byte) ((doubleBits >> 40) & 0xFF);
 		Memory.addresses[address + 6] = (byte) ((doubleBits >> 48) & 0xFF);
 		Memory.addresses[address + 7] = (byte) ((doubleBits >> 56) & 0xFF);
+		System.out.println("Stored " + registerValue + " inside of address " + address);
 
 	}
 }

@@ -12,15 +12,15 @@ import java.util.Set;
 public class ParseText {
 	static RegisterFile registerFile = new RegisterFile();
 	static Memory memory = new Memory();
+	static ALU alu = new ALU();
 
 	void parseTextFile() throws IOException {
-		Memory.storeSingle(0,(float) 2.56);
-		Memory.storeSingle(4, (float) 2.48);
+		Memory.storeSingle(0, 2.56f);
+		Memory.storeSingle(4, -2.48f);
 		File instructions = new File("./resources/instructions.txt");
 		BufferedReader br = new BufferedReader(new FileReader(instructions));
 		String str;
 		while ((str = br.readLine()) != null) {
-		System.out.println("F3 is" + RegisterFile.floatingRegisters[3]);
 			String regex = "[ ,]+";
 			String[] parsedInstruction = str.split(regex);
 			String OPCode = parsedInstruction[0];
@@ -30,28 +30,28 @@ public class ParseText {
 				double R3 = RegisterFile.readRegister(parsedInstruction[3]);
 				switch (OPCode) {
 				case "ADD.D":
-					addFloating(R1, R2, R3, false);
+					ALU.addFloating(R1, R2, R3, false);
 					break;
 				case "SUB.D":
-					subtractFloating(R1, R2, R3, false);
+					ALU.subtractFloating(R1, R2, R3, false);
 					break;
 				case "MUL.D":
-					multiplyFloating(R1, R2, R3, false);
+					ALU.multiplyFloating(R1, R2, R3, false);
 					break;
 				case "DIV.D":
-					divideFloating(R1, R2, R3, false);
+					ALU.divideFloating(R1, R2, R3, false);
 					break;
 				case "ADD.S":
-					addFloating(R1, R2, R3, true);
+					ALU.addFloating(R1, R2, R3, true);
 					break;
 				case "SUB.S":
-					subtractFloating(R1, R2, R3, true);
+					ALU.subtractFloating(R1, R2, R3, true);
 					break;
 				case "MUL.S":
-					multiplyFloating(R1, R2, R3, true);
+					ALU.multiplyFloating(R1, R2, R3, true);
 					break;
 				case "DIV.S":
-					divideFloating(R1, R2, R3, true);
+					ALU.divideFloating(R1, R2, R3, true);
 					break;
 				}
 
@@ -62,7 +62,10 @@ public class ParseText {
 				switch (OPCode) {
 				case "L.S":
 					float wordValue  = Memory.loadSingle(memoryAddress);
-					RegisterFile.writeRegister(R1, wordValue );
+					// this weird hack is because precision gets fucked during conversion from float to double
+					// techincally gets more precise, but still is not something we wanted
+					double convertedWordValue =	Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
+					RegisterFile.writeRegister(R1, convertedWordValue);
 					break;
 				case "LW":
 					float integerWordValue = Memory.loadWord(memoryAddress);
@@ -140,54 +143,6 @@ public class ParseText {
 		possibleOperations.add("DIV.D");
 		possibleOperations.add("DIV.S");
 		return possibleOperations.contains(operation);
-	}
-
-	void addFloating(String F1, double F2, double F3, boolean single) {
-		if (single) {
-			System.out.println("Adding single values " + F2 + " + " + F3 + " and saving onto " + F1);
-			float result = (float) (F2 + F3);
-			RegisterFile.writeRegister(F1, result);
-		} else {
-			System.out.println("Adding double values " + F2 + " + " + F3 + " and saving onto " + F1);
-			double result = F2 + F3;
-			RegisterFile.writeRegister(F1, result);
-		}
-	}
-
-	void subtractFloating(String F1, double F2, double F3, boolean single) {
-		if (single) {
-			System.out.println("Subtracting single values " + F2 + " + " + F3 + " and saving onto " + F1);
-			float result = (float) (F2 - F3);
-			RegisterFile.writeRegister(F1, result);
-		} else {
-			System.out.println("Subtracting double values " + F2 + " + " + F3 + " and saving onto " + F1);
-			double result = F2 - F3;
-			RegisterFile.writeRegister(F1, result);
-		}
-	}
-
-	void multiplyFloating(String F1, double F2, double F3, boolean single) {
-		if (single) {
-			System.out.println("Multiplying single values " + F2 + " + " + F3 + " and saving onto " + F1);
-			float result = (float) (F2 * F3);
-			RegisterFile.writeRegister(F1, result);
-		} else {
-			System.out.println("Multiplying double values " + F2 + " + " + F3 + " and saving onto " + F1);
-			double result = F2 * F3;
-			RegisterFile.writeRegister(F1, result);
-		}
-	}
-
-	void divideFloating(String F1, double F2, double F3, boolean single) {
-		if (single) {
-			System.out.println("Dividing single values " + F2 + " + " + F3 + " and saving onto " + F1);
-			float result = (float) (F2 / F3);
-			RegisterFile.writeRegister(F1, result);
-		} else {
-			System.out.println("Dividing double values " + F2 + " + " + F3 + " and saving onto " + F1);
-			double result = F2 / F3;
-			RegisterFile.writeRegister(F1, result);
-		}
 	}
 
 }
