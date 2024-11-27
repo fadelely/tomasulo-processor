@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,12 +18,19 @@ public class ParseText {
 	void parseTextFile() throws IOException {
 		Memory.storeSingle(0, 2.56f);
 		Memory.storeSingle(4, -2.48f);
-		File instructions = new File("./resources/instructions.txt");
-		BufferedReader br = new BufferedReader(new FileReader(instructions));
+		File instructionList = new File("./resources/instructions.txt");
+		BufferedReader br = new BufferedReader(new FileReader(instructionList));
 		String str;
+		// puts all the instructions in an array, so we can branch easily later
+		ArrayList<String> instructions = new ArrayList<String>();
 		while ((str = br.readLine()) != null) {
+			instructions.add(str);
+		}
+		br.close();
+		
+		for (int i = 0 ;i< instructions.size() ; i++) {
 			String regex = "[ ,]+";
-			String[] parsedInstruction = str.split(regex);
+			String[] parsedInstruction = instructions.get(i).split(regex);
 			String OPCode = parsedInstruction[0];
 			if (isALUOperation(OPCode)) {
 				String F1 = parsedInstruction[1]; // string as this is where we will save our result
@@ -114,16 +122,28 @@ public class ParseText {
 					break;
 				}
 			} else {
+				long R1 = (long) RegisterFile.readRegister(parsedInstruction[1]);
 				switch (OPCode) {
+				// branching currently only handles integers; pray we dont need floating
 				case "BNEQ":
+				long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
+					if(R1 != R2)
+					{
+						int instruction =Integer.parseInt(parsedInstruction[3]) ;
+						i = instruction - 1; // -1 since we will increment at the end of the loop
+						
+					}
 					break;
 				case "BEQZ":
+					if(R1 == 0)
+					{
+						int instruction =Integer.parseInt(parsedInstruction[2]) ;
+						i = instruction - 1; // -1 since we will increment at the end of the loop
+					}
 					break;
 				}
 
 			}
-			br.close();
-			System.out.println(RegisterFile.readRegister("F1"));
 		}
 	}
 
