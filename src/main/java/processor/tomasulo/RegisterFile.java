@@ -24,42 +24,39 @@ public class RegisterFile {
 
 	}
 
+	// since the read register can return either a floating register or integer
+	// register, and we don't know which will be
+	// returned, we use this to hold both return types and use the one we want
+	public class ReturnedRegister {
+
+	}
+
 	static FloatingRegister floatingRegisters[];
 	static IntegerRegister integerRegisters[];
 
 	public RegisterFile() {
 		floatingRegisters = new FloatingRegister[32];
-		for (FloatingRegister reg : floatingRegisters)
-			reg = new FloatingRegister();
+		for(int i = 0;i<floatingRegisters.length;i++)
+			floatingRegisters[i] = new FloatingRegister();
 
 		integerRegisters = new IntegerRegister[32];
-		for (IntegerRegister reg : integerRegisters)
-			reg = new IntegerRegister();
+		for(int i = 0;i<integerRegisters.length;i++)
+			integerRegisters[i] = new IntegerRegister();
 	}
 
-	public static double readRegister(String register) {
+	public static IntegerRegister readIntegerRegister(String register) {
 		int registerNumber = register.charAt(1) - '0';
-		switch (register.charAt(0)) {
-		case 'R':
-			IntegerRegister intReg = RegisterFile.integerRegisters[registerNumber];
-			if (intReg.Qi == 0) {
-				long registerValue = intReg.value;
-				System.out.println("Reading register " + register + ", value is: " + registerValue);
-				return registerValue;
-			} else {
-				// return tag
-			}
-		case 'F':
-			FloatingRegister floatReg = RegisterFile.floatingRegisters[registerNumber];
-			if (floatReg.Qi == 0) {
-				double floatingRegisterValue = floatReg.value;
-				System.out.println("Reading register " + register + ", value is: " + floatingRegisterValue);
-				return floatingRegisterValue;
-			} else {
-				// return tag
-			}
-		}
-		return -1;
+		IntegerRegister intReg = RegisterFile.integerRegisters[registerNumber];
+		System.out.println("Reading register " + register + ", value is: " + intReg.value + ", and q is " + intReg.Qi);
+		return intReg;
+	}
+
+	public static FloatingRegister readFloatRegister(String register) {
+		int registerNumber = register.charAt(1) - '0';
+		FloatingRegister floatReg = RegisterFile.floatingRegisters[registerNumber];
+		System.out.println("Reading register " + register + ", value is: " + floatReg.value + ", and q is " + floatReg.Qi);
+		return floatReg;
+
 	}
 
 	public static void writeRegister(String register, double value, int tag) {
