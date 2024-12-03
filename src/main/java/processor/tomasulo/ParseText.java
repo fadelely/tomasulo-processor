@@ -34,12 +34,6 @@ public class ParseText {
 		possibleOperations.add("ADD.S");
 		possibleOperations.add("SUB.D");
 		possibleOperations.add("SUB.S");
-		possibleOperations.add("SUB.S");
-		possibleOperations.add("SUB.S");
-//		possibleOperations.add("MUL.D");
-//		possibleOperations.add("MUL.S");
-//		possibleOperations.add("DIV.D");
-//		possibleOperations.add("DIV.S");
 		return possibleOperations.contains(opcode);
 
 	}
