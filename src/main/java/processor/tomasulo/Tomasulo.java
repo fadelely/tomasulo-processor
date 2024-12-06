@@ -2,11 +2,25 @@ package processor.tomasulo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 import processor.tomasulo.RegisterFile.FloatingRegister;
 import processor.tomasulo.RegisterFile.IntegerRegister;
 
 public class Tomasulo {
+	private Consumer<String> updateLog;
+
+
+	public void setUpdateLogCallback(Consumer<String> callback) {
+		this.updateLog = callback;
+	}
+
+	private void logUpdate(String message) {
+		if (updateLog != null)
+			updateLog.accept(message);
+
+	}
+
 	public class LoadBuffer {
 
 		boolean busy;
@@ -37,7 +51,7 @@ public class Tomasulo {
 		}
 	}
 
-	public class ReservationStation {
+	public static class ReservationStation {
 
 		public int tag;
 		public boolean busy;
@@ -96,6 +110,7 @@ public class Tomasulo {
 		ParseText parseText = new ParseText();
 		instructions = parseText.parseTextFile();
 		for (int i = 0; i < instructions.size(); i++) {
+			logUpdate("In clock cycle: " + clockCycle);
 			System.out.println("In clock cycle: " + clockCycle);
 
 			if (stalled) {
@@ -116,7 +131,7 @@ public class Tomasulo {
 					}
 
 				if (freeReservationStation == null) {
-					System.out.println("Add stations are full, stalling...");
+					logUpdate("Stalled due to full reservation station...");
 					i--;
 					stalled = true;
 					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
@@ -161,7 +176,7 @@ public class Tomasulo {
 					}
 
 				if (freeReservationStation == null) {
-					System.out.println("Multiply stations are full, stalling...");
+					logUpdate("Stalled due to full reservation station...");
 					i--;
 					stalled = true;
 					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
@@ -206,7 +221,7 @@ public class Tomasulo {
 					}
 
 				if (freeReservationStation == null) {
-					System.out.println("Add stations are full, stalling...");
+					logUpdate("Stalled due to full reservation station...");
 					i--;
 					stalled = true;
 					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
@@ -247,7 +262,7 @@ public class Tomasulo {
 					}
 
 				if (freeLoadBuffer == null) {
-					System.out.println("Load buffers are full, stalling...");
+					logUpdate("Stalled due to full reservation station...");
 					i--;
 					stalled = true;
 					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
@@ -292,7 +307,7 @@ public class Tomasulo {
 					}
 
 				if (freeStoreBuffer  == null) {
-					System.out.println("Store buffers are full, stalling...");
+					logUpdate("Stalled due to full reservation station...");
 					i--;
 					stalled = true;
 					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
@@ -358,7 +373,7 @@ public class Tomasulo {
 //
 //			}
 //		}
-
+		clockCycle++;
 		}
 
 	}

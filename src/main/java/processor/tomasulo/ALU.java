@@ -15,6 +15,7 @@ public class ALU {
 			float result = (float) (F2 + F3);
 			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
 			RegisterFile.writeRegister(F1, convertedResult, tag);
+			Tomasulo.addReservationStations[0]=new Tomasulo.ReservationStation(tag);
 		} else {
 			System.out.println("Adding double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 + F3;
