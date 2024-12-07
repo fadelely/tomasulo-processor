@@ -2,13 +2,28 @@ package processor.tomasulo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.util.Duration;
 import processor.tomasulo.RegisterFile.FloatingRegister;
 import processor.tomasulo.RegisterFile.IntegerRegister;
 
 public class Tomasulo {
 	private Consumer<String> updateLog;
+
+
+	public static int addReservationStationsSize = 4;
+	public static int multiplyReservationStationsSize = 4;
+	public static int loadBuffersSize = 4;
+	public static int storeBuffersSize = 4;
+
 
 
 	public void setUpdateLogCallback(Consumer<String> callback) {
@@ -21,11 +36,38 @@ public class Tomasulo {
 
 	}
 
+
 	public class LoadBuffer {
 
 		boolean busy;
 		int tag;
 		int address;
+
+		public boolean isBusy() {
+			return busy;
+		}
+
+		public void setBusy(boolean busy) {
+			this.busy = busy;
+		}
+
+		// Getter and Setter for tag
+		public int getTag() {
+			return tag;
+		}
+
+		public void setTag(int tag) {
+			this.tag = tag;
+		}
+
+		// Getter and Setter for address
+		public int getAddress() {
+			return address;
+		}
+
+		public void setAddress(int address) {
+			this.address = address;
+		}
 
 		public LoadBuffer(int tag) {
 			this.tag = tag;
@@ -42,6 +84,50 @@ public class Tomasulo {
 		int Q;
 		int address;
 
+		// Getter and Setter for busy
+		public boolean isBusy() {
+			return busy;
+		}
+
+		public void setBusy(boolean busy) {
+			this.busy = busy;
+		}
+
+		// Getter and Setter for tag
+		public int getTag() {
+			return tag;
+		}
+
+		public void setTag(int tag) {
+			this.tag = tag;
+		}
+
+		// Getter and Setter for V
+		public double getV() {
+			return V;
+		}
+
+		public void setV(double v) {
+			V = v;
+		}
+
+		// Getter and Setter for Q
+		public int getQ() {
+			return Q;
+		}
+
+		public void setQ(int q) {
+			Q = q;
+		}
+
+		// Getter and Setter for address
+		public int getAddress() {
+			return address;
+		}
+
+		public void setAddress(int address) {
+			this.address = address;
+		}
 		public StoreBuffer(int tag) {
 			this.tag = tag;
 			busy = false;
@@ -61,6 +147,70 @@ public class Tomasulo {
 		public int qj;
 		public int qk;
 		public int address;
+		// Getters and Setters
+		public int getTag() {
+			return tag;
+		}
+
+		public void setTag(int tag) {
+			this.tag = tag;
+		}
+
+		public boolean isBusy() { // Note: for boolean, the getter is `is` instead of `get`.
+			return busy;
+		}
+
+		public void setBusy(boolean busy) {
+			this.busy = busy;
+		}
+
+		public String getOpcode() {
+			return opcode;
+		}
+
+		public void setOpcode(String opcode) {
+			this.opcode = opcode;
+		}
+
+		public double getVj() {
+			return vj;
+		}
+
+		public void setVj(double vj) {
+			this.vj = vj;
+		}
+
+		public double getVk() {
+			return vk;
+		}
+
+		public void setVk(double vk) {
+			this.vk = vk;
+		}
+
+		public int getQj() {
+			return qj;
+		}
+
+		public void setQj(int qj) {
+			this.qj = qj;
+		}
+
+		public int getQk() {
+			return qk;
+		}
+
+		public void setQk(int qk) {
+			this.qk = qk;
+		}
+
+		public int getAddress() {
+			return address;
+		}
+
+		public void setAddress(int address) {
+			this.address = address;
+		}
 
 		public ReservationStation(int tag) {
 			this.tag = tag;
@@ -82,10 +232,10 @@ public class Tomasulo {
 	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the instructions, not yet
 																			// executed :)
 	// size should be entered by user
-	public static ReservationStation addReservationStations[] = new ReservationStation[4];
-	public static ReservationStation multiplyReservationStations[] = new ReservationStation[4];
-	public static LoadBuffer loadBuffers[] = new LoadBuffer[4];
-	public static StoreBuffer storeBuffers[] = new StoreBuffer[4];
+	public static ReservationStation addReservationStations[] = new ReservationStation[addReservationStationsSize];
+	public static ReservationStation multiplyReservationStations[] = new ReservationStation[multiplyReservationStationsSize];
+	public static LoadBuffer loadBuffers[] = new LoadBuffer[loadBuffersSize];
+	public static StoreBuffer storeBuffers[] = new StoreBuffer[storeBuffersSize];
 
 	public static int clockCycle = 1;
 	public static boolean stalled = false;
