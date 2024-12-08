@@ -4,7 +4,6 @@ import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -205,10 +204,6 @@ public class App extends Application{
         primaryStage.setFullScreen(true); // Set to fullscreen
         primaryStage.show();
     }
-
-
-
-
 
     public static void main(String[] args) throws IOException {
         tomasulo.init();

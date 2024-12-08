@@ -80,4 +80,19 @@ public class RegisterFile {
 		}
 
 	}
+
+	public static void writeTagToRegisterFile(String register, int tag)
+	{
+		int registerNumber = register.charAt(1) - '0';
+		switch (register.charAt(0)) {
+			case 'R':
+				IntegerRegister intReg = RegisterFile.integerRegisters[registerNumber];
+				intReg.Qi = tag;
+
+			case 'F':
+				FloatingRegister floatReg = RegisterFile.floatingRegisters[registerNumber];
+				floatReg.Qi = tag;
+		}
+
+	}
 }
