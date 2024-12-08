@@ -1,11 +1,6 @@
 package processor.tomasulo;
 
 import java.io.IOException;
-import java.util.function.Function;
-
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -17,17 +12,14 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import java.util.Arrays;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
+
 
 
 public class App extends Application{
-    private final ObservableList<Tomasulo.ReservationStation> addStationData = FXCollections.observableArrayList();
-    private final ObservableList<Tomasulo.ReservationStation> multiplyStationData = FXCollections.observableArrayList();
-    private final ObservableList<Tomasulo.LoadBuffer> loadBufferData = FXCollections.observableArrayList();
-    private final ObservableList<Tomasulo.StoreBuffer> storeBufferData = FXCollections.observableArrayList();
+
+    public static Tomasulo tomasulo=new Tomasulo();
 
 
     private void setupTable(TableView<Tomasulo.ReservationStation> table) {
@@ -61,14 +53,14 @@ public class App extends Application{
     }
     private void setupTableLoad(TableView<Tomasulo.LoadBuffer> table) {
 
-        TableColumn<Tomasulo.LoadBuffer, String> tagColumn = new TableColumn<>("Tag");
-        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
+        TableColumn<Tomasulo.LoadBuffer, Number> tagColumn = new TableColumn<>("Tag");
+        tagColumn.setCellValueFactory(cellData -> cellData.getValue().tagProperty());
 
         TableColumn<Tomasulo.LoadBuffer, Boolean> busyColumn = new TableColumn<>("Busy");
-        busyColumn.setCellValueFactory(new PropertyValueFactory<>("busy"));
+        busyColumn.setCellValueFactory(cellData -> cellData.getValue().busyProperty());
 
-        TableColumn<Tomasulo.LoadBuffer, String> addressColumn = new TableColumn<>("Address");
-        addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+        TableColumn<Tomasulo.LoadBuffer, Number> addressColumn = new TableColumn<>("Address");
+        addressColumn.setCellValueFactory(cellData -> cellData.getValue().addressProperty());
 
         // Add columns to the table
         table.getColumns().addAll(tagColumn,busyColumn, addressColumn);
@@ -78,20 +70,20 @@ public class App extends Application{
     }
     private void setupTableStore(TableView<Tomasulo.StoreBuffer> table) {
 
-        TableColumn<Tomasulo.StoreBuffer, String> tagColumn = new TableColumn<>("Tag");
-        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
+        TableColumn<Tomasulo.StoreBuffer, Number> tagColumn = new TableColumn<>("Tag");
+        tagColumn.setCellValueFactory(cellData -> cellData.getValue().tagProperty());
 
         TableColumn<Tomasulo.StoreBuffer, Boolean> busyColumn = new TableColumn<>("Busy");
-        busyColumn.setCellValueFactory(new PropertyValueFactory<>("busy"));
+        busyColumn.setCellValueFactory(cellData->cellData.getValue().busyProperty());
 
-        TableColumn<Tomasulo.StoreBuffer, String> addressColumn = new TableColumn<>("Address");
-        addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+        TableColumn<Tomasulo.StoreBuffer, Number> addressColumn = new TableColumn<>("Address");
+        addressColumn.setCellValueFactory(cellData->cellData.getValue().addressProperty());
 
-        TableColumn<Tomasulo.StoreBuffer, String> vColumn = new TableColumn<>("V");
-        vColumn.setCellValueFactory(new PropertyValueFactory<>("v"));
+        TableColumn<Tomasulo.StoreBuffer, Number> vColumn = new TableColumn<>("V");
+        vColumn.setCellValueFactory(cellData->cellData.getValue().VProperty());
 
-        TableColumn<Tomasulo.StoreBuffer, String> qColumn = new TableColumn<>("Q");
-        qColumn.setCellValueFactory(new PropertyValueFactory<>("q"));
+        TableColumn<Tomasulo.StoreBuffer, Number> qColumn = new TableColumn<>("Q");
+        qColumn.setCellValueFactory(cellData->cellData.getValue().QProperty());
 
         // Add columns to the table
         table.getColumns().addAll(tagColumn,busyColumn, addressColumn, vColumn, qColumn);
@@ -99,7 +91,7 @@ public class App extends Application{
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
-    private <T> void customizeTagColumn(TableView<T> table, String prefix, Function<T, Integer> tagExtractor) {
+    private <T> void customizeTagColumn(TableView<T> table, String prefix) {
         TableColumn<T, String> tagColumn = (TableColumn<T, String>) table.getColumns()
                 .stream()
                 .filter(col -> col.getText().equals("Tag")) // Match column by header name
@@ -114,45 +106,28 @@ public class App extends Application{
         }
     }
 
-    private void populateTableAdd(TableView<Tomasulo.ReservationStation> table,Tomasulo.ReservationStation[] reservationStations, int size) {
-        ObservableList<Tomasulo.ReservationStation> data = FXCollections.observableArrayList(reservationStations);
-        table.setItems(data);
-        customizeTagColumn(table, "A", Tomasulo.ReservationStation::getTag);
+    private void populateTableAdd(TableView<Tomasulo.ReservationStation> table,ObservableList<Tomasulo.ReservationStation> reservationStations) {
+        table.setItems(reservationStations);
+        customizeTagColumn(table, "A");
 
 
     }
-    private void populateTableMultiply(TableView<Tomasulo.ReservationStation> table,Tomasulo.ReservationStation[] reservationStations, int size) {
-        ObservableList<Tomasulo.ReservationStation> data = FXCollections.observableArrayList(reservationStations);
-        table.setItems(data);
-        customizeTagColumn(table, "M", Tomasulo.ReservationStation::getTag);
+    private void populateTableMultiply(TableView<Tomasulo.ReservationStation> table, ObservableList<Tomasulo.ReservationStation> reservationStations) {
+        table.setItems(reservationStations);
+        customizeTagColumn(table, "M");
 
     }
-    private void populateTableLoad(TableView<Tomasulo.LoadBuffer> table, Tomasulo.LoadBuffer[] buffers, int size) {
-        ObservableList<Tomasulo.LoadBuffer> data = FXCollections.observableArrayList(buffers);
-        table.setItems(data);
-        customizeTagColumn(table, "L", Tomasulo.LoadBuffer::getTag);
+    private void populateTableLoad(TableView<Tomasulo.LoadBuffer> table,  ObservableList<Tomasulo.LoadBuffer> buffers) {
+        table.setItems(buffers);
+        customizeTagColumn(table, "L");
 
     }
-    private void populateTableStore(TableView<Tomasulo.StoreBuffer> table, Tomasulo.StoreBuffer[] buffers, int size) {
-        ObservableList<Tomasulo.StoreBuffer> data = FXCollections.observableArrayList(buffers);
-        table.setItems(data);
-        customizeTagColumn(table, "S", Tomasulo.StoreBuffer::getTag);
+    private void populateTableStore(TableView<Tomasulo.StoreBuffer> table, ObservableList<Tomasulo.StoreBuffer> buffers) {
+        table.setItems(buffers);
+        customizeTagColumn(table, "S");
 
     }
 
-    private void syncFrontendWithBackend() {
-        Platform.runLater(() -> {
-            addStationData.setAll(Arrays.asList(Tomasulo.addReservationStations));
-            multiplyStationData.setAll(Arrays.asList(Tomasulo.multiplyReservationStations));
-            loadBufferData.setAll(Arrays.asList(Tomasulo.loadBuffers));
-            storeBufferData.setAll(Arrays.asList(Tomasulo.storeBuffers));
-        });
-    }
-    private void startDataSync() {
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0.5), e -> syncFrontendWithBackend()));
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
-    }
 
 
     @Override
@@ -169,7 +144,7 @@ public class App extends Application{
         Label addStationLabel = new Label("AddReservation");
         VBox addStationBox = new VBox(10, addStationLabel, addStationTable); // Increased spacing
         addStationBox.setPrefWidth(300); // Set preferred width for better visibility
-        populateTableAdd(addStationTable, Tomasulo.addReservationStations, tomasulo.addReservationStationsSize);
+        populateTableAdd(addStationTable, Tomasulo.addReservationStations);
 
         // MultiplyReservation table
         TableView<Tomasulo.ReservationStation> multiplyStationTable = new TableView<>();
@@ -177,7 +152,7 @@ public class App extends Application{
         Label multiplyStationLabel = new Label("MultiplyReservation");
         VBox multiplyStationBox = new VBox(10, multiplyStationLabel, multiplyStationTable);
         multiplyStationBox.setPrefWidth(300);
-        populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations, tomasulo.multiplyReservationStationsSize);
+        populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations);
 
 
         // StoreReservation table
@@ -186,7 +161,7 @@ public class App extends Application{
         Label storeStationLabel = new Label("StoreReservation");
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
-        populateTableStore(storeStationTable, Tomasulo.storeBuffers, tomasulo.storeBuffersSize);
+        populateTableStore(storeStationTable, Tomasulo.storeBuffers);
 
 
         // LoadReservation table
@@ -195,7 +170,7 @@ public class App extends Application{
         Label loadStationLabel = new Label("LoadReservation");
         VBox loadStationBox = new VBox(10, loadStationLabel, loadStationTable);
         loadStationBox.setPrefWidth(150);
-        populateTableLoad(loadStationTable, Tomasulo.loadBuffers, tomasulo.loadBuffersSize);
+        populateTableLoad(loadStationTable, Tomasulo.loadBuffers);
 
 
 
@@ -236,11 +211,9 @@ public class App extends Application{
 
 
     public static void main(String[] args) throws IOException {
-        Tomasulo tomasolu = new Tomasulo();
-        tomasolu.startExecution();
+        tomasulo.init();
+//        tomasulo.startExecution();
         launch();
-
-
     }
 
 }
