@@ -3,6 +3,7 @@ package processor.tomasulo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Scanner;
 
 import processor.tomasulo.RegisterFile.FloatingRegister;
 import processor.tomasulo.RegisterFile.IntegerRegister;
@@ -116,6 +117,7 @@ public class Tomasulo {
 		System.out.println("In clock cycle: " + clockCycle);
 			if (!stalled)
 				instruction = instructionIterator.next();
+
 			execute();
 			issue(instruction);
 			clockCycle++;
@@ -127,11 +129,11 @@ public class Tomasulo {
 		{
 			if(multiplicationStation.busy)
 			{
-				if(multiplicationStation.executionTime > 0)
+				if(multiplicationStation.executionTime > 0 && multiplicationStation.qj == 0 && multiplicationStation.qk == 0)
 					multiplicationStation.executionTime--;
-				else
+				else if (multiplicationStation.executionTime == 0)
 				{
-					
+
 				}
 			}
 		}
@@ -139,12 +141,36 @@ public class Tomasulo {
 		{
 			if(additionStation.busy)
 			{
-				if(additionStation.executionTime > 0)
+				if(additionStation.executionTime > 0 && additionStation.qj == 0 && additionStation.qk == 0)
 					additionStation.executionTime--;
-				else
+				else if (additionStation.executionTime == 0)
+				{
+				}
+			}
+		}
+		for(LoadBuffer loadBuffer: loadBuffers)
+		{
+			if(loadBuffer.busy)
+			{
+				if(loadBuffer.executionTime > 0)
+					loadBuffer.executionTime--;
+				else if (loadBuffer.executionTime == 0)
+				{
+				}
+				
+			}
+		}
+		for(StoreBuffer storeBuffer: storeBuffers)
+		{
+			if(storeBuffer.busy)
+			{
+				if(storeBuffer.executionTime > 0 && storeBuffer.Q == 0)
+					storeBuffer.executionTime--;
+				else if(storeBuffer.executionTime == 0)
 				{
 					
 				}
+
 			}
 		}
 //				switch (OPCode) {
