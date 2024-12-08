@@ -324,7 +324,7 @@ public class Tomasulo {
 		for (int i = 0; i < addReservationStationsSize; i++){
 			ReservationStation addReservationStation = new ReservationStation(tag++);
 			addReservationStations.add(addReservationStation);
-			System.out.println("Add: "+addReservationStation.tag+"   "+i);
+//			System.out.println("Add: "+addReservationStation.tag+"   "+i);
 
 		}
 
@@ -332,19 +332,19 @@ public class Tomasulo {
 		for (int i = 0; i < multiplyReservationStationsSize; i++){
 			ReservationStation multiplyReservationStation = new ReservationStation(tag++);
 			multiplyReservationStations.add(multiplyReservationStation);
-			System.out.println("Multiply: "+multiplyReservationStation.tag+"   "+i);
+//			System.out.println("Multiply: "+multiplyReservationStation.tag+"   "+i);
 		}
 
 
 		for (int i = 0; i < loadBuffersSize; i++) {
 			LoadBuffer loadBuffer = new LoadBuffer(tag++);
 			loadBuffers.add(loadBuffer);
-			System.out.println("Load: "+loadBuffer.tag+"   "+i);
+//			System.out.println("Load: "+loadBuffer.tag+"   "+i);
 		}
 		for (int i = 0; i < storeBuffersSize; i++) {
 			StoreBuffer storeBuffer = new StoreBuffer(tag++);
 			storeBuffers.add(storeBuffer);
-			System.out.println("Store :" +storeBuffer.tag+"   "+i);
+//			System.out.println("Store :" +storeBuffer.tag+"   "+i);
 		}
 	}
 
@@ -354,7 +354,7 @@ public class Tomasulo {
 		instructions = parseText.parseTextFile();
 		for (int i = 0; i < instructions.size(); i++) {
 			logUpdate("In clock cycle: " + clockCycle);
-			System.out.println("In clock cycle: " + clockCycle);
+//			System.out.println("In clock cycle: " + clockCycle);
 
 			if (stalled) {
 				i--;
@@ -502,7 +502,7 @@ public class Tomasulo {
 				// int only,
 				LoadBuffer freeLoadBuffer= null;
 				for (LoadBuffer loadBuffer : loadBuffers) {
-					System.out.println(loadBuffer.tag + "   " + loadBuffer.busy);
+//					System.out.println(loadBuffer.tag + "   " + loadBuffer.busy);
 					if (!loadBuffer.isBusy()) {
 						freeLoadBuffer = loadBuffer;
 						break;
@@ -594,7 +594,7 @@ public class Tomasulo {
 						if(freeStoreBuffer.getQ()==0)
 							freeStoreBuffer.setV(doubleRegister.value);
 						Memory.storeDouble(freeStoreBuffer.getAddress(), freeStoreBuffer.getV());
-						System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
+//						System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
 						break;
 				}
 			}
