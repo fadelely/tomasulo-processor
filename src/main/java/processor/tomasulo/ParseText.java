@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -69,6 +67,22 @@ public class ParseText {
 		possibleOperations.add("SW");
 		possibleOperations.add("S.D");
 		possibleOperations.add("S.S");
+		return possibleOperations.contains(opcode);
+
+	}
+
+	boolean isFloatStoreOperation(String opcode) {
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("S.D");
+		possibleOperations.add("S.S");
+		return possibleOperations.contains(opcode);
+
+	}
+
+	boolean isIntegerStoreOperation(String opcode) {
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("SD");
+		possibleOperations.add("SW");
 		return possibleOperations.contains(opcode);
 
 	}

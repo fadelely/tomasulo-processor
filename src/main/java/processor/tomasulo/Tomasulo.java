@@ -228,7 +228,7 @@ public class Tomasulo {
 
 	public static class ReservationStation {
 
-		private final IntegerProperty tag;
+		private int tag;
 		private final BooleanProperty busy;
 		private final StringProperty opcode; // Using StringProperty instead of a plain string.
 		private final DoubleProperty vj;
@@ -241,7 +241,7 @@ public class Tomasulo {
 
 		// Constructor
 		public ReservationStation(int tag) {
-			this.tag = new SimpleIntegerProperty(tag);
+			this.tag = 0;
 			this.busy = new SimpleBooleanProperty(false);
 			this.opcode = new SimpleStringProperty("");
 			this.vj = new SimpleDoubleProperty(0.0);
@@ -253,16 +253,16 @@ public class Tomasulo {
 		}
 
 		// Getter and Setter for tag
-		public IntegerProperty tagProperty() {
+//		public IntegerProperty tagProperty() {
+//			return tag;
+//		}
+
+		public int getTag() {
 			return tag;
 		}
 
-		public int getTag() {
-			return tag.get();
-		}
-
 		public void setTag(int tag) {
-			this.tag.set(tag);
+			this.tag = tag;
 		}
 
 		// Getter and Setter for busy
@@ -405,15 +405,16 @@ public class Tomasulo {
 		String instruction = "";
 		while (true) {
 			System.out.println("In clock cycle: " + clockCycle);
-			if (!stalled)
+			instruction = "";
+			if (!stalled && instructionIterator.hasNext())
 				instruction = instructionIterator.next();
-
+			
 			execute();
-			issue(instruction);
+			if(!instruction.equals(""))
+				issue(instruction);
 			clockCycle++;
 		}
 	}
-
 
 	public void issue(String instruction) throws IOException {
 //		init();
@@ -435,10 +436,8 @@ public class Tomasulo {
 
 			if (freeReservationStation == null) {
 				logUpdate("Stalled due to full reservation station...");
-
 				stalled = true;
 				return ;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
 			}
 
 			freeReservationStation.setBusy(true);
@@ -453,6 +452,7 @@ public class Tomasulo {
 				freeReservationStation.setVj(F2.value);
 			if (F3.Qi == 0)
 				freeReservationStation.setVk(F3.value);
+			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
 
 
 		} else if (parseText.isMultiplyOperation(OPCode)) {
@@ -467,7 +467,6 @@ public class Tomasulo {
 				logUpdate("Stalled due to full reservation station...");
 				stalled = true;
 				return ;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
 			}
 
 			freeReservationStation.setBusy(true);
@@ -482,6 +481,7 @@ public class Tomasulo {
 				freeReservationStation.setVj(F2.value);
 			if (F3.Qi == 0)
 				freeReservationStation.setVk(F3.value);
+			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
 
 		} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
 			ReservationStation freeReservationStation = null;
@@ -495,7 +495,6 @@ public class Tomasulo {
 				logUpdate("Stalled due to full reservation station...");
 				stalled = true;
 				return;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
 			}
 
 			freeReservationStation.setBusy(true);
@@ -511,6 +510,7 @@ public class Tomasulo {
 			if (R2.Qi == 0)
 				freeReservationStation.setVj(R2.value);
 			freeReservationStation.setVk(immediate);
+			RegisterFile.writeTagToRegisterFile(R1, freeReservationStation.getTag());
 
 		} else if (parseText.isLoadOperation(OPCode)) {
 			// logically, it should be long, since the memory is 64 bits, but a limitation
@@ -518,7 +518,6 @@ public class Tomasulo {
 			// int only,
 			LoadBuffer freeLoadBuffer = null;
 			for (LoadBuffer loadBuffer : loadBuffers) {
-//					System.out.println(loadBuffer.tag + "   " + loadBuffer.busy);
 				if (!loadBuffer.isBusy()) {
 					freeLoadBuffer = loadBuffer;
 					break;
@@ -529,15 +528,16 @@ public class Tomasulo {
 				logUpdate("Stalled due to full reservation station...");
 				stalled = true;
 				return ;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
 			}
 
-			String R1 = parsedInstruction[1]; // string as this is where we will save our result
+			String R1 = parsedInstruction[1]; // can be integer or floating register
 			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
 
 			freeLoadBuffer.setBusy(true);
 			freeLoadBuffer.setAddress(memoryAddress);
 			freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
+			RegisterFile.writeTagToRegisterFile(R1, freeLoadBuffer.getTag());
+
 		} else if (parseText.isStoreOperation(OPCode)) {
 			// logically, it should be long, since the memory is 64 bits, but a limitation
 			// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
@@ -553,11 +553,28 @@ public class Tomasulo {
 				logUpdate("Stalled due to full reservation station...");
 				stalled = true;
 				return;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
 			}
 
-			String R1 = parsedInstruction[1]; // string as this is where we will save our result
 			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
+			if(parseText.isIntegerStoreOperation(OPCode))
+			{
+				IntegerRegister R1 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
+
+				freeStoreBuffer.setQ(R1.Qi); // if its 0, woo, if not, it saves it :)
+				freeStoreBuffer.setQ(0); // since it only reads one register :)
+				if (R1.Qi == 0)
+					freeStoreBuffer.setV(R1.value);
+			}
+			// don't need the if since the else will always be true, but it is left for readibility's sake
+			else if(parseText.isFloatStoreOperation(OPCode)) 
+			{
+				FloatingRegister F1 = RegisterFile.readFloatRegister(parsedInstruction[1]);
+
+				freeStoreBuffer.setQ(F1.Qi); // if its 0, woo, if not, it saves it :)
+				freeStoreBuffer.setQ(0); // since it only reads one register :)
+				if (F1.Qi == 0)
+					freeStoreBuffer.setV(F1.value);
+			}
 
 			freeStoreBuffer.setBusy(true);
 			freeStoreBuffer.setAddress(memoryAddress);

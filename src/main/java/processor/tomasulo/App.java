@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 
 
 
+@SuppressWarnings("unchecked")
 public class App extends Application{
 
     public static Tomasulo tomasulo=new Tomasulo();
@@ -50,7 +51,7 @@ public class App extends Application{
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
-    private void setupTableLoad(TableView<Tomasulo.LoadBuffer> table) {
+	private void setupTableLoad(TableView<Tomasulo.LoadBuffer> table) {
 
         TableColumn<Tomasulo.LoadBuffer, Number> tagColumn = new TableColumn<>("Tag");
         tagColumn.setCellValueFactory(cellData -> cellData.getValue().tagProperty());
