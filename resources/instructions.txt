@@ -1,4 +1,2 @@
-L.S F2,2
 ADD.D F2,F2,F2
-MUL.D F2,F2,F2
 S.D F2,0

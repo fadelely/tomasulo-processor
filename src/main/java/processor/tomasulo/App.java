@@ -141,8 +141,8 @@ public class App extends Application{
         TableView<Tomasulo.ReservationStation> addStationTable = new TableView<>();
         setupTable(addStationTable);
         Label addStationLabel = new Label("AddReservation");
-        VBox addStationBox = new VBox(10, addStationLabel, addStationTable); // Increased spacing
-        addStationBox.setPrefWidth(300); // Set preferred width for better visibility
+        VBox addStationBox = new VBox(10, addStationLabel, addStationTable);
+        addStationBox.setPrefWidth(300);
         populateTableAdd(addStationTable, Tomasulo.addReservationStations);
 
         // MultiplyReservation table
@@ -153,7 +153,6 @@ public class App extends Application{
         multiplyStationBox.setPrefWidth(300);
         populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations);
 
-
         // StoreReservation table
         TableView<Tomasulo.StoreBuffer> storeStationTable = new TableView<>();
         setupTableStore(storeStationTable);
@@ -161,7 +160,6 @@ public class App extends Application{
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
         populateTableStore(storeStationTable, Tomasulo.storeBuffers);
-
 
         // LoadReservation table
         TableView<Tomasulo.LoadBuffer> loadStationTable = new TableView<>();
@@ -171,15 +169,14 @@ public class App extends Application{
         loadStationBox.setPrefWidth(150);
         populateTableLoad(loadStationTable, Tomasulo.loadBuffers);
 
-
-
         // Layout to align tables horizontally
-        HBox tablesBox = new HBox(20, addStationBox, multiplyStationBox, storeStationBox,loadStationBox); // Increased spacing
+        HBox tablesBox = new HBox(20, addStationBox, multiplyStationBox, storeStationBox, loadStationBox);
         HBox.setHgrow(addStationBox, Priority.ALWAYS);
         HBox.setHgrow(multiplyStationBox, Priority.ALWAYS);
         HBox.setHgrow(storeStationBox, Priority.ALWAYS);
         HBox.setHgrow(loadStationBox, Priority.ALWAYS);
 
+        // Start Button
         Button startButton = new Button("Start");
         startButton.setOnAction(e -> {
             tomasulo.setUpdateLogCallback(logArea::appendText);
@@ -192,8 +189,24 @@ public class App extends Application{
             }).start();
         });
 
+        // Next Cycle Button
+        Button nextCycleButton = new Button("Next Cycle");
+        nextCycleButton.setOnAction(e -> {
+            tomasulo.setUpdateLogCallback(logArea::appendText);
+            new Thread(() -> {
+                Platform.runLater(() -> {
+                    try {
+//                        tomasulo.executeCycle(); // method to pass the cycle
+                    } catch (Exception ex) {
+                        logArea.appendText("Error during cycle execution: " + ex.getMessage() + "\n");
+                    }
+                });
+            }).start();
+        });
+
         // Main layout
-        VBox layout = new VBox(20, logArea, tablesBox, startButton); // Adjusted spacing
+        HBox buttonsBox = new HBox(10, startButton, nextCycleButton);
+        VBox layout = new VBox(20, logArea, tablesBox, buttonsBox);
         layout.setPadding(new Insets(15));
         VBox.setVgrow(tablesBox, Priority.ALWAYS);
         VBox.setVgrow(logArea, Priority.ALWAYS);
@@ -201,9 +214,10 @@ public class App extends Application{
         Scene scene = new Scene(layout);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Tomasulo Simulator");
-        primaryStage.setFullScreen(true); // Set to fullscreen
+        primaryStage.setFullScreen(true);
         primaryStage.show();
     }
+
 
     public static void main(String[] args) throws IOException {
         tomasulo.init();

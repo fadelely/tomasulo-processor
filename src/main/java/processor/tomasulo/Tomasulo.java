@@ -1,30 +1,52 @@
 package processor.tomasulo;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.function.Consumer;
-
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.util.Duration;
 import processor.tomasulo.RegisterFile.FloatingRegister;
 import processor.tomasulo.RegisterFile.IntegerRegister;
 
 public class Tomasulo {
 	private Consumer<String> updateLog;
 
-
 	public static int addReservationStationsSize = 4;
 	public static int multiplyReservationStationsSize = 4;
 	public static int loadBuffersSize = 4;
 	public static int storeBuffersSize = 4;
 
+	public static int LoadBufferExecutionTime = 1;
+
+	public static int StoreBufferExecutionTime = 1;
+
+	public static int AddReservationStationExecutionTime = 2;
+
+	public static int MultiplyReservationStationExecutionTime = 4;
+
+	public static RegisterFile registerFile = new RegisterFile();
+	public static Memory memory = new Memory();
+	public static ALU alu = new ALU();
+
+	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the instructions, not yet
+	// executed :)
+	// size should be entered by user
+	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
+
+	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
+
+
+	public static ObservableList<LoadBuffer> loadBuffers = FXCollections.observableArrayList();
+	public static ObservableList<StoreBuffer> storeBuffers = FXCollections.observableArrayList();
+
+	private int currentInstructionIndex = 0; // Index of the instruction being executed
+	private int remainingClockCycles = 0;   // Clock cycles remaining for the current instruction
+	private boolean stalled = false;        // Stalled state
+	private int clockCycle = 1;             // Current clock cycle
+	private String currentOPCode = "";      // OPCode of the instruction being executed
+
+	ParseText parseText = new ParseText();
 
 
 	public void setUpdateLogCallback(Consumer<String> callback) {
@@ -43,11 +65,14 @@ public class Tomasulo {
 		private final IntegerProperty tag;
 		private final IntegerProperty address;
 
+		private final IntegerProperty executionTime;
+
 		// Constructor
 		public LoadBuffer(int tag) {
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
 			this.address = new SimpleIntegerProperty(0);
+			this.executionTime = new SimpleIntegerProperty(0);
 		}
 
 		// Getter and Setter for busy
@@ -88,6 +113,18 @@ public class Tomasulo {
 		public IntegerProperty addressProperty() {
 			return address;
 		}
+
+		public IntegerProperty executionTimeProperty() {
+			return executionTime;
+		}
+
+		public int getExecutionTime() {
+			return executionTime.get();
+		}
+
+		public void setExecutionTime(int executionTime) {
+			this.executionTime.set(executionTime);
+		}
 	}
 
 	public class StoreBuffer {
@@ -98,6 +135,9 @@ public class Tomasulo {
 		private final IntegerProperty Q;
 		private final IntegerProperty address;
 
+		private final IntegerProperty executionTime;
+
+
 		// Constructor
 		public StoreBuffer(int tag) {
 			this.tag = new SimpleIntegerProperty(tag);
@@ -105,6 +145,7 @@ public class Tomasulo {
 			this.V = new SimpleDoubleProperty(0);
 			this.Q = new SimpleIntegerProperty(0);
 			this.address = new SimpleIntegerProperty(0);
+			this.executionTime = new SimpleIntegerProperty(0);
 		}
 
 		// Getter and Setter for busy
@@ -171,6 +212,18 @@ public class Tomasulo {
 		public void setAddress(int address) {
 			this.address.set(address);
 		}
+
+		public IntegerProperty executionTimeProperty() {
+			return executionTime;
+		}
+
+		public int getExecutionTime() {
+			return executionTime.get();
+		}
+
+		public void setExecutionTime(int executionTime) {
+			this.executionTime.set(executionTime);
+		}
 	}
 
 	public static class ReservationStation {
@@ -184,6 +237,8 @@ public class Tomasulo {
 		private final IntegerProperty qk;
 		private final IntegerProperty address;
 
+		private final IntegerProperty executionTime;
+
 		// Constructor
 		public ReservationStation(int tag) {
 			this.tag = new SimpleIntegerProperty(tag);
@@ -194,6 +249,7 @@ public class Tomasulo {
 			this.qj = new SimpleIntegerProperty(0);
 			this.qk = new SimpleIntegerProperty(0);
 			this.address = new SimpleIntegerProperty(0);
+			this.executionTime = new SimpleIntegerProperty(0);
 		}
 
 		// Getter and Setter for tag
@@ -299,29 +355,23 @@ public class Tomasulo {
 		public void setAddress(int address) {
 			this.address.set(address);
 		}
+
+		public IntegerProperty executionTimeProperty() {
+			return executionTime;
+		}
+
+		public int getExecutionTime() {
+			return executionTime.get();
+		}
+
+		public void setExecutionTime(int executionTime) {
+			this.executionTime.set(executionTime);
+		}
 	}
-
-
-	public static RegisterFile registerFile = new RegisterFile();
-	public static Memory memory = new Memory();
-	public static ALU alu = new ALU();
-
-	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the instructions, not yet
-	// executed :)
-	// size should be entered by user
-	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
-
-	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
-
-
-	public static ObservableList<LoadBuffer> loadBuffers = FXCollections.observableArrayList();
-	public static ObservableList<StoreBuffer> storeBuffers = FXCollections.observableArrayList();
-	public static int clockCycle = 1;
-	public static boolean stalled = false;
 
 	public void init() {
 		int tag = 1;
-		for (int i = 0; i < addReservationStationsSize; i++){
+		for (int i = 0; i < addReservationStationsSize; i++) {
 			ReservationStation addReservationStation = new ReservationStation(tag++);
 			addReservationStations.add(addReservationStation);
 //			System.out.println("Add: "+addReservationStation.tag+"   "+i);
@@ -329,7 +379,7 @@ public class Tomasulo {
 		}
 
 
-		for (int i = 0; i < multiplyReservationStationsSize; i++){
+		for (int i = 0; i < multiplyReservationStationsSize; i++) {
 			ReservationStation multiplyReservationStation = new ReservationStation(tag++);
 			multiplyReservationStations.add(multiplyReservationStation);
 //			System.out.println("Multiply: "+multiplyReservationStation.tag+"   "+i);
@@ -350,280 +400,340 @@ public class Tomasulo {
 
 	public void startExecution() throws IOException {
 //		init();
-		ParseText parseText = new ParseText();
 		instructions = parseText.parseTextFile();
-		for (int i = 0; i < instructions.size(); i++) {
-			logUpdate("In clock cycle: " + clockCycle);
-//			System.out.println("In clock cycle: " + clockCycle);
+		Iterator<String> instructionIterator = instructions.iterator();
+		String instruction = "";
+		while (true) {
+			System.out.println("In clock cycle: " + clockCycle);
+			if (!stalled)
+				instruction = instructionIterator.next();
 
-			if (stalled) {
-				i--;
-				System.out.println("I am stalled");
-
-//				continue;
-			}
-
-			String regex = "[ ,]+";
-			String[] parsedInstruction = instructions.get(i).split(regex);
-			String OPCode = parsedInstruction[0];
-			System.out.println("OPCode: " + OPCode);
-			if (parseText.isAdditionOperation(OPCode)) {
-				// check for empty addition stations, if none are avaliable, stall
-				ReservationStation freeReservationStation = null;
-				for (ReservationStation addReservationStation : addReservationStations)
-					if (!addReservationStation.isBusy()) {
-						freeReservationStation = addReservationStation;
-						break;
-					}
-
-				if (freeReservationStation == null) {
-					logUpdate("Stalled due to full reservation station...");
-					i--;
-					stalled = true;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
-				}
-
-				freeReservationStation.setBusy(true);
-				freeReservationStation.setOpcode(OPCode);
-				String F1 = parsedInstruction[1]; // string as this is where we will save our result
-				FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
-				FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
-				freeReservationStation.setQj(F2.Qi); // if its 0, woo, if not, it saves it :)
-				freeReservationStation.setQk(F3.Qi); // if its 0, woo, if not, it saves it :)
-				if (F2.Qi == 0)
-					freeReservationStation.setVj(F2.value);
-				if (F3.Qi == 0)
-					freeReservationStation.setVk(F3.value);
-
-				switch (OPCode) {
-					case "ADD.D":
-						ALU.addFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-								freeReservationStation.getTag());
-						break;
-					case "SUB.D":
-						ALU.subtractFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-								freeReservationStation.getTag());
-						break;
-					case "ADD.S":
-						ALU.addFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-								freeReservationStation.getTag());
-						break;
-					case "SUB.S":
-						ALU.subtractFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-								freeReservationStation.getTag());
-						break;
-				}
-			} else if (parseText.isMultiplyOperation(OPCode)) {
-				ReservationStation freeReservationStation = null;
-				for (ReservationStation multiplyReservationStation : multiplyReservationStations)
-					if (!multiplyReservationStation.isBusy()) {
-						freeReservationStation = multiplyReservationStation;
-						break;
-					}
-
-				if (freeReservationStation == null) {
-					logUpdate("Stalled due to full reservation station...");
-					i--;
-					stalled = true;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
-				}
-
-				freeReservationStation.setBusy(true);
-				freeReservationStation.setOpcode(OPCode);
-				String F1 = parsedInstruction[1]; // string as this is where we will save our result
-				FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
-				FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
-				freeReservationStation.setQj(F2.Qi); // if its 0, woo, if not, it saves it :)
-				freeReservationStation.setQk(F3.Qi); // if its 0, woo, if not, it saves it :)
-				if (F2.Qi == 0)
-					freeReservationStation.setVj(F2.value);
-				if (F3.Qi == 0)
-					freeReservationStation.setVk( F3.value);
-				switch (OPCode) {
-					case "MUL.D":
-						ALU.multiplyFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-								freeReservationStation.getTag());
-						break;
-					case "DIV.D":
-						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-								freeReservationStation.getTag());
-						break;
-					case "MUL.S":
-						ALU.multiplyFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-								freeReservationStation.getTag());
-						break;
-					case "DIV.S":
-						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-								freeReservationStation.getTag());
-						break;
-
-				}
-			} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
-				ReservationStation freeReservationStation = null;
-				for (ReservationStation addReservationStation : addReservationStations)
-					if (!addReservationStation.isBusy()) {
-						freeReservationStation = addReservationStation;
-						break;
-					}
-
-				if (freeReservationStation == null) {
-					logUpdate("Stalled due to full reservation station...");
-					i--;
-					stalled = true;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
-				}
-
-				freeReservationStation.setBusy(true);
-				freeReservationStation.setOpcode(OPCode);
-
-				String R1 = parsedInstruction[1]; // string as this is where we will save our result
-				IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
-				short immediate = Short.valueOf(parsedInstruction[3]);
-
-				freeReservationStation.setQj(R2.Qi); // if its 0, woo, if not, it saves it :)
-				freeReservationStation.setQk(0); // since it only reads one register :)
-				if (R2.Qi == 0)
-					freeReservationStation.setVj(R2.value);
-				freeReservationStation.setVk(immediate);
-
-				switch (OPCode) {
-					case "ADDI":
-						ALU.addImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
-						break;
-					case "SUBI":
-						ALU.subtractImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
-						break;
-				}
-
-			}
-			else if (parseText.isLoadOperation(OPCode)) {
-				// logically, it should be long, since the memory is 64 bits, but a limitation
-				// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
-				// int only,
-				LoadBuffer freeLoadBuffer= null;
-				for (LoadBuffer loadBuffer : loadBuffers) {
-//					System.out.println(loadBuffer.tag + "   " + loadBuffer.busy);
-					if (!loadBuffer.isBusy()) {
-						freeLoadBuffer = loadBuffer;
-						break;
-					}
-				}
-
-				if (freeLoadBuffer == null) {
-					logUpdate("Stalled due to full reservation station...");
-					i--;
-					stalled = true;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
-				}
-
-				String R1 = parsedInstruction[1]; // string as this is where we will save our result
-				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
-
-				freeLoadBuffer.setBusy(true);
-				freeLoadBuffer.setAddress(memoryAddress);
-				switch (OPCode) {
-					case "L.S":
-						float wordValue = Memory.loadSingle(freeLoadBuffer.getAddress());
-						// this weird hack is because precision gets fucked during conversion from float
-						// to double techincally gets more precise, but still is not something we wanted
-						double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
-						RegisterFile.writeRegister(R1, convertedWordValue, freeLoadBuffer.getTag());
-						break;
-					case "LW":
-						int integerWordValue = Memory.loadWord(freeLoadBuffer.getAddress());
-						RegisterFile.writeRegister(R1, integerWordValue, freeLoadBuffer.getTag());
-						break;
-					case "L.D":
-						double doubleWordValue = Memory.loadDouble(freeLoadBuffer.getAddress());
-						RegisterFile.writeRegister(R1, doubleWordValue, freeLoadBuffer.getTag());
-						break;
-					case "LD":
-						double integerDoubleWordValue = Memory.loadDoubleWord(freeLoadBuffer.getAddress());
-						RegisterFile.writeRegister(R1, integerDoubleWordValue, freeLoadBuffer.getTag());
-						break;
-				}
-			}
-			else if (parseText.isStoreOperation(OPCode)) {
-				// logically, it should be long, since the memory is 64 bits, but a limitation
-				// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
-				// int only,
-				StoreBuffer freeStoreBuffer = null;
-				for (StoreBuffer storeBuffer: storeBuffers)
-					if (!storeBuffer.isBusy()) {
-						freeStoreBuffer  = storeBuffer;
-						break;
-					}
-
-				if (freeStoreBuffer  == null) {
-					logUpdate("Stalled due to full reservation station...");
-					i--;
-					stalled = true;
-//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
-				}
-
-				String R1 = parsedInstruction[1]; // string as this is where we will save our result
-				int memoryAddress = Integer.parseInt(parsedInstruction[2]);
-
-				freeStoreBuffer.setBusy(true);
-				freeStoreBuffer.setAddress(memoryAddress);
-				switch (OPCode) {
-					case "SW":
-						IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
-						freeStoreBuffer.setQ(integerRegisterValue.Qi);
-						if(freeStoreBuffer.getQ()==0)
-							freeStoreBuffer.setV(integerRegisterValue.value);
-						Memory.storeWord(freeStoreBuffer.getAddress(), (int) freeStoreBuffer.getV());
-						break;
-					case "S.S":
-						FloatingRegister  floatRegister =  RegisterFile.readFloatRegister(R1);
-						freeStoreBuffer.setQ(floatRegister.Qi);
-						if(freeStoreBuffer.getQ()==0)
-							freeStoreBuffer.setV(floatRegister.value);
-						Memory.storeSingle(freeStoreBuffer.getAddress(), (float) freeStoreBuffer.getV());
-						break;
-					case "SD":
-						IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
-						freeStoreBuffer.setQ(longRegisterValue.Qi);
-						if(freeStoreBuffer.getQ()==0)
-							freeStoreBuffer.setV(longRegisterValue.value);
-						Memory.storeDoubleWord(freeStoreBuffer.getAddress(), (long) freeStoreBuffer.getV());
-						break;
-					case "S.D":
-						FloatingRegister doubleRegister =  RegisterFile.readFloatRegister(R1);
-						freeStoreBuffer.setQ(doubleRegister.Qi);
-						if(freeStoreBuffer.getQ()==0)
-							freeStoreBuffer.setV(doubleRegister.value);
-						Memory.storeDouble(freeStoreBuffer.getAddress(), freeStoreBuffer.getV());
-//						System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
-						break;
-				}
-			}
-
-//
-//			} else {
-//				long R1 = (long) RegisterFile.readRegister(parsedInstruction[1]);
-//				switch (OPCode) {
-//				// branching currently only handles integers; pray we dont need floating
-//				case "BNEQ":
-//					long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
-//					if (R1 != R2) {
-//						int instruction = Integer.parseInt(parsedInstruction[3]);
-//						i = instruction - 1; // -1 since we will increment at the end of the loop
-//
-//					}
-//					break;
-//				case "BEQZ":
-//					if (R1 == 0) {
-//						int instruction = Integer.parseInt(parsedInstruction[2]);
-//						i = instruction - 1; // -1 since we will increment at the end of the loop
-//					}
-//					break;
-//				}
-//
-//			}
-//		}
+			execute();
+			issue(instruction);
 			clockCycle++;
 		}
-
 	}
+
+
+	public void issue(String instruction) throws IOException {
+//		init();
+		if (stalled)
+			return;
+
+		String regex = "[ ,]+";
+		String[] parsedInstruction = instruction.split(regex);
+		String OPCode = parsedInstruction[0];
+
+		if (parseText.isAdditionOperation(OPCode)) {
+			// check for empty addition stations, if none are avaliable, stall
+			ReservationStation freeReservationStation = null;
+			for (ReservationStation addReservationStation : addReservationStations)
+				if (!addReservationStation.isBusy()) {
+					freeReservationStation = addReservationStation;
+					break;
+				}
+
+			if (freeReservationStation == null) {
+				logUpdate("Stalled due to full reservation station...");
+
+				stalled = true;
+				return ;
+//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+			}
+
+			freeReservationStation.setBusy(true);
+			freeReservationStation.setOpcode(OPCode);
+			freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
+			String F1 = parsedInstruction[1]; // string as this is where we will save our result
+			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+			freeReservationStation.setQj(F2.Qi); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(F3.Qi); // if its 0, woo, if not, it saves it :)
+			if (F2.Qi == 0)
+				freeReservationStation.setVj(F2.value);
+			if (F3.Qi == 0)
+				freeReservationStation.setVk(F3.value);
+
+
+		} else if (parseText.isMultiplyOperation(OPCode)) {
+			ReservationStation freeReservationStation = null;
+			for (ReservationStation multiplyReservationStation : multiplyReservationStations)
+				if (!multiplyReservationStation.isBusy()) {
+					freeReservationStation = multiplyReservationStation;
+					break;
+				}
+
+			if (freeReservationStation == null) {
+				logUpdate("Stalled due to full reservation station...");
+				stalled = true;
+				return ;
+//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+			}
+
+			freeReservationStation.setBusy(true);
+			freeReservationStation.setOpcode(OPCode);
+			freeReservationStation.setExecutionTime(MultiplyReservationStationExecutionTime);
+			String F1 = parsedInstruction[1]; // string as this is where we will save our result
+			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+			freeReservationStation.setQj(F2.Qi); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(F3.Qi); // if its 0, woo, if not, it saves it :)
+			if (F2.Qi == 0)
+				freeReservationStation.setVj(F2.value);
+			if (F3.Qi == 0)
+				freeReservationStation.setVk(F3.value);
+
+		} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
+			ReservationStation freeReservationStation = null;
+			for (ReservationStation addReservationStation : addReservationStations)
+				if (!addReservationStation.isBusy()) {
+					freeReservationStation = addReservationStation;
+					break;
+				}
+
+			if (freeReservationStation == null) {
+				logUpdate("Stalled due to full reservation station...");
+				stalled = true;
+				return;
+//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+			}
+
+			freeReservationStation.setBusy(true);
+			freeReservationStation.setOpcode(OPCode);
+			freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
+
+			String R1 = parsedInstruction[1]; // string as this is where we will save our result
+			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
+			short immediate = Short.valueOf(parsedInstruction[3]);
+
+			freeReservationStation.setQj(R2.Qi); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(0); // since it only reads one register :)
+			if (R2.Qi == 0)
+				freeReservationStation.setVj(R2.value);
+			freeReservationStation.setVk(immediate);
+
+		} else if (parseText.isLoadOperation(OPCode)) {
+			// logically, it should be long, since the memory is 64 bits, but a limitation
+			// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
+			// int only,
+			LoadBuffer freeLoadBuffer = null;
+			for (LoadBuffer loadBuffer : loadBuffers) {
+//					System.out.println(loadBuffer.tag + "   " + loadBuffer.busy);
+				if (!loadBuffer.isBusy()) {
+					freeLoadBuffer = loadBuffer;
+					break;
+				}
+			}
+
+			if (freeLoadBuffer == null) {
+				logUpdate("Stalled due to full reservation station...");
+				stalled = true;
+				return ;
+//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+			}
+
+			String R1 = parsedInstruction[1]; // string as this is where we will save our result
+			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
+
+			freeLoadBuffer.setBusy(true);
+			freeLoadBuffer.setAddress(memoryAddress);
+			freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
+		} else if (parseText.isStoreOperation(OPCode)) {
+			// logically, it should be long, since the memory is 64 bits, but a limitation
+			// of java is that arrays can only be addressed max by 2^32 - 1 numbers, or an
+			// int only,
+			StoreBuffer freeStoreBuffer = null;
+			for (StoreBuffer storeBuffer : storeBuffers)
+				if (!storeBuffer.isBusy()) {
+					freeStoreBuffer = storeBuffer;
+					break;
+				}
+
+			if (freeStoreBuffer == null) {
+				logUpdate("Stalled due to full reservation station...");
+				stalled = true;
+				return;
+//					continue; // ma3rafash el continue deeh hatshta8ala wala la2, pray
+			}
+
+			String R1 = parsedInstruction[1]; // string as this is where we will save our result
+			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
+
+			freeStoreBuffer.setBusy(true);
+			freeStoreBuffer.setAddress(memoryAddress);
+			freeStoreBuffer.setExecutionTime(StoreBufferExecutionTime);
+		}
+
+		clockCycle++;
+
+
 }
+
+	private void execute() {
+		for(ReservationStation multiplicationStation: multiplyReservationStations)
+		{
+			if(multiplicationStation.isBusy())
+			{
+				if(multiplicationStation.getExecutionTime() > 0 && multiplicationStation.getQj() == 0 && multiplicationStation.getQk() == 0)
+					multiplicationStation.setExecutionTime(multiplicationStation.getExecutionTime()-1);
+				else if (multiplicationStation.getExecutionTime()==0)
+				{
+
+				}
+			}
+		}
+		for(ReservationStation additionStation: addReservationStations)
+		{
+			if(additionStation.isBusy())
+			{
+				if(additionStation.getExecutionTime()> 0 && additionStation.getQj()== 0 && additionStation.getQk() == 0)
+					additionStation.setExecutionTime(additionStation.getExecutionTime()-1);
+				else if (additionStation.getExecutionTime()== 0)
+				{
+				}
+			}
+		}
+		for(LoadBuffer loadBuffer: loadBuffers)
+		{
+			if(loadBuffer.isBusy())
+			{
+				if(loadBuffer.getExecutionTime() > 0)
+					loadBuffer.setExecutionTime(loadBuffer.getExecutionTime()-1);
+				else if (loadBuffer.getExecutionTime()==0)
+				{
+				}
+
+			}
+		}
+		for(StoreBuffer storeBuffer: storeBuffers)
+		{
+			if(storeBuffer.isBusy())
+			{
+				if(storeBuffer.getExecutionTime() > 0 && storeBuffer.getQ() == 0)
+					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime()-1);
+				else if(storeBuffer.getExecutionTime()== 0)
+				{
+
+				}
+
+			}
+		}
+//		long R1 = (long) RegisterFile.readRegister(parsedInstruction[1]);
+//
+//		switch(OPCode)
+//				{
+//				    case "ADD.D":
+//						ALU.addFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
+//								freeReservationStation.getTag());
+//						break;
+//					case "SUB.D":
+//						ALU.subtractFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
+//								freeReservationStation.getTag());
+//						break;
+//					case "ADD.S":
+//						ALU.addFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
+//								freeReservationStation.getTag());
+//						break;
+//					case "SUB.S":
+//						ALU.subtractFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
+//								freeReservationStation.getTag());
+//						break;
+//
+//				    case "MUL.D":
+//						ALU.multiplyFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
+//								freeReservationStation.getTag());
+//						break;
+//					case "DIV.D":
+//						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
+//								freeReservationStation.getTag());
+//						break;
+//					case "MUL.S":
+//						ALU.multiplyFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
+//								freeReservationStation.getTag());
+//						break;
+//					case "DIV.S":
+//						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
+//								freeReservationStation.getTag());
+//						break;
+//				    case "ADDI":
+//						ALU.addImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
+//						break;
+//					case "SUBI":
+//						ALU.subtractImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
+//						break;
+//				    case "SW":
+//						IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
+//						freeStoreBuffer.setQ(integerRegisterValue.Qi);
+//						if(freeStoreBuffer.getQ()==0)
+//							freeStoreBuffer.setV(integerRegisterValue.value);
+//						Memory.storeWord(freeStoreBuffer.getAddress(), (int) freeStoreBuffer.getV());
+//						break;
+//					case "S.S":
+//						FloatingRegister  floatRegister =  RegisterFile.readFloatRegister(R1);
+//						freeStoreBuffer.setQ(floatRegister.Qi);
+//						if(freeStoreBuffer.getQ()==0)
+//							freeStoreBuffer.setV(floatRegister.value);
+//						Memory.storeSingle(freeStoreBuffer.getAddress(), (float) freeStoreBuffer.getV());
+//						break;
+//					case "SD":
+//						IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
+//						freeStoreBuffer.setQ(longRegisterValue.Qi);
+//						if(freeStoreBuffer.getQ()==0)
+//							freeStoreBuffer.setV(longRegisterValue.value);
+//						Memory.storeDoubleWord(freeStoreBuffer.getAddress(), (long) freeStoreBuffer.getV());
+//						break;
+//					case "S.D":
+//						FloatingRegister doubleRegister =  RegisterFile.readFloatRegister(R1);
+//						freeStoreBuffer.setQ(doubleRegister.Qi);
+//						if(freeStoreBuffer.getQ()==0)
+//							freeStoreBuffer.setV(doubleRegister.value);
+//						Memory.storeDouble(freeStoreBuffer.getAddress(), freeStoreBuffer.getV());
+//       				    System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
+//						break;
+//				    case "L.S":
+//						float wordValue = Memory.loadSingle(freeLoadBuffer.getAddress());
+//						// this weird hack is because precision gets fucked during conversion from float
+//						// to double techincally gets more precise, but still is not something we wanted
+//						double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
+//						RegisterFile.writeRegister(R1, convertedWordValue, freeLoadBuffer.getTag());
+//						break;
+//					case "LW":
+//						int integerWordValue = Memory.loadWord(freeLoadBuffer.getAddress());
+//						RegisterFile.writeRegister(R1, integerWordValue, freeLoadBuffer.getTag());
+//						break;
+//					case "L.D":
+//						double doubleWordValue = Memory.loadDouble(freeLoadBuffer.getAddress());
+//						RegisterFile.writeRegister(R1, doubleWordValue, freeLoadBuffer.getTag());
+//						break;
+//					case "LD":
+//						double integerDoubleWordValue = Memory.loadDoubleWord(freeLoadBuffer.getAddress());
+//						RegisterFile.writeRegister(R1, integerDoubleWordValue, freeLoadBuffer.getTag());
+//						break;
+////				case "BNEQ":
+////					long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
+////					if (R1 != R2) {
+////						int instruction = Integer.parseInt(parsedInstruction[3]);
+////						i = instruction - 1; // -1 since we will increment at the end of the loop
+////
+////					}
+////					break;
+////				case "BEQZ":
+////					if (R1 == 0) {
+////						int instruction = Integer.parseInt(parsedInstruction[2]);
+////						i = instruction - 1; // -1 since we will increment at the end of the loop
+////					}
+////					break;
+//
+//
+//			}
+		}
+
+
+
+
+
+}
+
+
+
+
