@@ -65,7 +65,7 @@ public class Tomasulo
 	public class LoadBuffer
 	{
 
-		private int issueTime; // tracks when did it enter the reservation station; used to
+		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
 								// determine priority when two instructions are writing at the same time
 		private final StringProperty opcode;
 
@@ -78,7 +78,7 @@ public class Tomasulo
 		// Constructor
 		public LoadBuffer(int tag)
 		{
-			this.issueTime = 0;
+			this.issueTime = new SimpleIntegerProperty(-1);
 			this.opcode = new SimpleStringProperty("");
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
@@ -149,14 +149,19 @@ public class Tomasulo
 			this.executionTime.set(executionTime);
 		}
 
-		public int getIssueTime()
+		public IntegerProperty issueTimeProperty()
 		{
 			return issueTime;
 		}
 
+		public int getIssueTime()
+		{
+			return issueTime.get();
+		}
+
 		public void setIssueTime(int issueTime)
 		{
-			this.issueTime = issueTime;
+			this.issueTime.set(issueTime);
 		}
 
 		public StringProperty opcodeProperty()
@@ -178,7 +183,7 @@ public class Tomasulo
 	public class StoreBuffer
 	{
 
-		private int issueTime; // tracks when did it enter the reservation station; used to
+		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
 								// determine
 								// priority
 								// when two instructions are writing at the same time
@@ -194,7 +199,7 @@ public class Tomasulo
 		// Constructor
 		public StoreBuffer(int tag)
 		{
-			this.issueTime = 0;
+			this.issueTime = new SimpleIntegerProperty(-1);
 			this.opcode = new SimpleStringProperty("");
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
@@ -299,16 +304,6 @@ public class Tomasulo
 			this.executionTime.set(executionTime);
 		}
 
-		public int getIssueTime()
-		{
-			return issueTime;
-		}
-
-		public void setIssueTime(int issueTime)
-		{
-			this.issueTime = issueTime;
-		}
-
 		public StringProperty opcodeProperty()
 		{
 			return opcode;
@@ -324,13 +319,27 @@ public class Tomasulo
 			this.opcode.set(opcode);
 		}
 
+		public IntegerProperty issueTimeProperty()
+		{
+			return issueTime;
+		}
+
+		public int getIssueTime()
+		{
+			return issueTime.get();
+		}
+
+		public void setIssueTime(int issueTime)
+		{
+			this.issueTime.set(issueTime);
+		}
 	}
 
 	public static class ReservationStation
 	{
 
 		private int tag;
-		private int issueTime; // tracks when did it enter the reservation station; used to
+		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
 								// determine priority when two instructions are writing at the same
 								// time
 		private final BooleanProperty busy;
@@ -347,7 +356,7 @@ public class Tomasulo
 		public ReservationStation(int tag)
 		{
 			this.tag = 0;
-			this.issueTime = 0;
+			this.issueTime = new SimpleIntegerProperty(-1);
 			this.busy = new SimpleBooleanProperty(false);
 			this.opcode = new SimpleStringProperty("");
 			this.vj = new SimpleDoubleProperty(0.0);
@@ -500,14 +509,19 @@ public class Tomasulo
 			this.executionTime.set(executionTime);
 		}
 
-		public int getIssueTime()
+		public IntegerProperty issueTimeProperty()
 		{
 			return issueTime;
 		}
 
+		public int getIssueTime()
+		{
+			return issueTime.get();
+		}
+
 		public void setIssueTime(int issueTime)
 		{
-			this.issueTime = issueTime;
+			this.issueTime.set(issueTime);
 		}
 	}
 
@@ -562,8 +576,6 @@ public class Tomasulo
 			{
 				e.printStackTrace();
 			}
-//			Scanner scanner = new Scanner(System.in);
-//			scanner.next();
 			clockCycle++;
 		}
 	}
@@ -597,6 +609,7 @@ public class Tomasulo
 			freeReservationStation.setBusy(true);
 			freeReservationStation.setOpcode(OPCode);
 			freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
+			freeReservationStation.setIssueTime(clockCycle);
 			String F1 = parsedInstruction[1]; // string as this is where we will save our result
 			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
 			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
@@ -627,6 +640,7 @@ public class Tomasulo
 			freeReservationStation.setBusy(true);
 			freeReservationStation.setOpcode(OPCode);
 			freeReservationStation.setExecutionTime(MultiplyReservationStationExecutionTime);
+			freeReservationStation.setIssueTime(clockCycle);
 			String F1 = parsedInstruction[1]; // string as this is where we will save our result
 			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
 			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
@@ -657,6 +671,7 @@ public class Tomasulo
 			freeReservationStation.setBusy(true);
 			freeReservationStation.setOpcode(OPCode);
 			freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
+			freeReservationStation.setIssueTime(clockCycle);
 
 			String R1 = parsedInstruction[1]; // string as this is where we will save our result
 			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
@@ -699,6 +714,7 @@ public class Tomasulo
 			freeLoadBuffer.setAddress(memoryAddress);
 			freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
 			freeLoadBuffer.setOpcode(OPCode);
+			freeLoadBuffer.setIssueTime(clockCycle);
 			RegisterFile.writeTagToRegisterFile(R1, freeLoadBuffer.getTag());
 
 		}
@@ -744,6 +760,7 @@ public class Tomasulo
 			freeStoreBuffer.setAddress(memoryAddress);
 			freeStoreBuffer.setExecutionTime(StoreBufferExecutionTime);
 			freeStoreBuffer.setOpcode(OPCode);
+			freeStoreBuffer.setIssueTime(clockCycle);
 		}
 
 	}
