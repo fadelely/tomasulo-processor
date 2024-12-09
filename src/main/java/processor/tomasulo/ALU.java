@@ -8,7 +8,10 @@ public class ALU {
 	 *  We do the weird hack for the converted result, but this might result in incorrect calulcations. Just means we
 	 *  need to test more :)
 	 */
-
+	public static void addOperation()
+	{
+		
+	}
 	public static void addFloating(String F1, double F2, double F3, boolean single, int tag) {
 		if (single) {
 			System.out.println("Adding single values " + F2 + " + " + F3 + " and saving onto " + F1);

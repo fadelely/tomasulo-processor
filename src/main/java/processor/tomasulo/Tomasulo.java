@@ -61,6 +61,8 @@ public class Tomasulo {
 
 	public class LoadBuffer {
 
+
+		private int issueTime; // tracks when did it enter the reservation station; used to determine priority when two instructions are writing at the same time
 		private final BooleanProperty busy;
 		private final IntegerProperty tag;
 		private final IntegerProperty address;
@@ -69,6 +71,7 @@ public class Tomasulo {
 
 		// Constructor
 		public LoadBuffer(int tag) {
+			this.issueTime = 0;
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
 			this.address = new SimpleIntegerProperty(0);
@@ -125,10 +128,19 @@ public class Tomasulo {
 		public void setExecutionTime(int executionTime) {
 			this.executionTime.set(executionTime);
 		}
+
+		public int getIssueTime() {
+			return issueTime;
+		}
+
+		public void setIssueTime(int issueTime) {
+			this.issueTime = issueTime;
+		}
 	}
 
 	public class StoreBuffer {
 
+		private int issueTime; // tracks when did it enter the reservation station; used to determine priority when two instructions are writing at the same time
 		private final BooleanProperty busy;
 		private final IntegerProperty tag;
 		private final DoubleProperty V;
@@ -140,6 +152,7 @@ public class Tomasulo {
 
 		// Constructor
 		public StoreBuffer(int tag) {
+			this.issueTime = 0;
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
 			this.V = new SimpleDoubleProperty(0);
@@ -224,11 +237,20 @@ public class Tomasulo {
 		public void setExecutionTime(int executionTime) {
 			this.executionTime.set(executionTime);
 		}
+
+		public int getIssueTime() {
+			return issueTime;
+		}
+
+		public void setIssueTime(int issueTime) {
+			this.issueTime = issueTime;
+		}
 	}
 
 	public static class ReservationStation {
 
 		private int tag;
+		private int issueTime; // tracks when did it enter the reservation station; used to determine priority when two instructions are writing at the same time
 		private final BooleanProperty busy;
 		private final StringProperty opcode; // Using StringProperty instead of a plain string.
 		private final DoubleProperty vj;
@@ -242,6 +264,7 @@ public class Tomasulo {
 		// Constructor
 		public ReservationStation(int tag) {
 			this.tag = 0;
+			this.issueTime = 0;
 			this.busy = new SimpleBooleanProperty(false);
 			this.opcode = new SimpleStringProperty("");
 			this.vj = new SimpleDoubleProperty(0.0);
@@ -367,6 +390,15 @@ public class Tomasulo {
 		public void setExecutionTime(int executionTime) {
 			this.executionTime.set(executionTime);
 		}
+
+
+		public int getIssueTime() {
+			return issueTime;
+		}
+
+		public void setIssueTime(int issueTime) {
+			this.issueTime = issueTime;
+		}
 	}
 
 	public void init() {
@@ -399,7 +431,6 @@ public class Tomasulo {
 	}
 
 	public void startExecution() throws IOException {
-//		init();
 		instructions = parseText.parseTextFile();
 		Iterator<String> instructionIterator = instructions.iterator();
 		String instruction = "";
@@ -409,7 +440,7 @@ public class Tomasulo {
 			if (!stalled && instructionIterator.hasNext())
 				instruction = instructionIterator.next();
 			
-			execute();
+			executeAndWrite();
 			if(!instruction.equals(""))
 				issue(instruction);
 			clockCycle++;
@@ -417,7 +448,6 @@ public class Tomasulo {
 	}
 
 	public void issue(String instruction) throws IOException {
-//		init();
 		if (stalled)
 			return;
 
@@ -582,168 +612,106 @@ public class Tomasulo {
 		}
 
 		clockCycle++;
-
-
 }
 
-	private void execute() {
-		for(ReservationStation multiplicationStation: multiplyReservationStations)
-		{
-			if(multiplicationStation.isBusy())
-			{
-				if(multiplicationStation.getExecutionTime() > 0 && multiplicationStation.getQj() == 0 && multiplicationStation.getQk() == 0)
-					multiplicationStation.setExecutionTime(multiplicationStation.getExecutionTime()-1);
-				else if (multiplicationStation.getExecutionTime()==0)
-				{
-
-				}
-			}
-		}
-		for(ReservationStation additionStation: addReservationStations)
-		{
-			if(additionStation.isBusy())
-			{
-				if(additionStation.getExecutionTime()> 0 && additionStation.getQj()== 0 && additionStation.getQk() == 0)
-					additionStation.setExecutionTime(additionStation.getExecutionTime()-1);
-				else if (additionStation.getExecutionTime()== 0)
-				{
-				}
-			}
-		}
+	// method mainly does two things: 1) decrement the execution time by 1 if it has all its operands (ie Qj and Qi are 0)
+    //								  2) if the execution time is 0, compute and publish the result depending on it priority
+	// the priority of a instruction is determined by the issue time, the earlier the instruction came to the station, the higher
+	// its priority. If two instructions have the same priority, then we determine its priority by the opcode, where load has 
+	// the highest priority, then the multiplication, then the addition, then finally the division. If both instructions are the
+	// same opcode (3ashan 5awal), then we choose the one with the lower tag number (so M1 has a higher priority than M2 for example)
+	private void executeAndWrite() throws Exception {
+		int lowestIssueTime = Integer.MAX_VALUE;
+		int theStrongestOneAfterGojoOfCourse = -1;// The tag of the one that will publish (based on priority above)
 		for(LoadBuffer loadBuffer: loadBuffers)
 		{
 			if(loadBuffer.isBusy())
 			{
 				if(loadBuffer.getExecutionTime() > 0)
 					loadBuffer.setExecutionTime(loadBuffer.getExecutionTime()-1);
-				else if (loadBuffer.getExecutionTime()==0)
+				else if (loadBuffer.getExecutionTime()==0 && lowestIssueTime > loadBuffer.getIssueTime())
 				{
+					lowestIssueTime = loadBuffer.getIssueTime();
+					theStrongestOneAfterGojoOfCourse = loadBuffer.getTag();
 				}
 
 			}
 		}
+
+		for(ReservationStation multiplicationStation: multiplyReservationStations)
+		{
+			if(multiplicationStation.isBusy())
+			{
+				if(multiplicationStation.getExecutionTime() > 0 && multiplicationStation.getQj() == 0 && multiplicationStation.getQk() == 0)
+					multiplicationStation.setExecutionTime(multiplicationStation.getExecutionTime()-1);
+				else if (multiplicationStation.getExecutionTime()==0 && lowestIssueTime > multiplicationStation.getIssueTime())
+				{
+					lowestIssueTime = multiplicationStation.getIssueTime();
+					theStrongestOneAfterGojoOfCourse = multiplicationStation.getTag();
+				}
+			}
+		}
+
+		for(ReservationStation additionStation: addReservationStations)
+		{
+			if(additionStation.isBusy())
+			{
+				if(additionStation.getExecutionTime()> 0 && additionStation.getQj()== 0 && additionStation.getQk() == 0)
+					additionStation.setExecutionTime(additionStation.getExecutionTime()-1);
+				else if (additionStation.getExecutionTime()== 0 && lowestIssueTime > additionStation.getIssueTime())
+				{
+					lowestIssueTime = additionStation.getIssueTime();
+					theStrongestOneAfterGojoOfCourse = additionStation.getTag();
+				}
+			}
+		}
+
 		for(StoreBuffer storeBuffer: storeBuffers)
 		{
 			if(storeBuffer.isBusy())
 			{
 				if(storeBuffer.getExecutionTime() > 0 && storeBuffer.getQ() == 0)
 					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime()-1);
-				else if(storeBuffer.getExecutionTime()== 0)
+				else if(storeBuffer.getExecutionTime()== 0 && lowestIssueTime > storeBuffer.getIssueTime())
 				{
-
+					lowestIssueTime = storeBuffer.getIssueTime();
+					theStrongestOneAfterGojoOfCourse = storeBuffer.getTag();
 				}
 
 			}
 		}
-//		long R1 = (long) RegisterFile.readRegister(parsedInstruction[1]);
-//
-//		switch(OPCode)
-//				{
-//				    case "ADD.D":
-//						ALU.addFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-//								freeReservationStation.getTag());
-//						break;
-//					case "SUB.D":
-//						ALU.subtractFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-//								freeReservationStation.getTag());
-//						break;
-//					case "ADD.S":
-//						ALU.addFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-//								freeReservationStation.getTag());
-//						break;
-//					case "SUB.S":
-//						ALU.subtractFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-//								freeReservationStation.getTag());
-//						break;
-//
-//				    case "MUL.D":
-//						ALU.multiplyFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-//								freeReservationStation.getTag());
-//						break;
-//					case "DIV.D":
-//						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), false,
-//								freeReservationStation.getTag());
-//						break;
-//					case "MUL.S":
-//						ALU.multiplyFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-//								freeReservationStation.getTag());
-//						break;
-//					case "DIV.S":
-//						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
-//								freeReservationStation.getTag());
-//						break;
-//				    case "ADDI":
-//						ALU.addImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
-//						break;
-//					case "SUBI":
-//						ALU.subtractImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
-//						break;
-//				    case "SW":
-//						IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
-//						freeStoreBuffer.setQ(integerRegisterValue.Qi);
-//						if(freeStoreBuffer.getQ()==0)
-//							freeStoreBuffer.setV(integerRegisterValue.value);
-//						Memory.storeWord(freeStoreBuffer.getAddress(), (int) freeStoreBuffer.getV());
-//						break;
-//					case "S.S":
-//						FloatingRegister  floatRegister =  RegisterFile.readFloatRegister(R1);
-//						freeStoreBuffer.setQ(floatRegister.Qi);
-//						if(freeStoreBuffer.getQ()==0)
-//							freeStoreBuffer.setV(floatRegister.value);
-//						Memory.storeSingle(freeStoreBuffer.getAddress(), (float) freeStoreBuffer.getV());
-//						break;
-//					case "SD":
-//						IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
-//						freeStoreBuffer.setQ(longRegisterValue.Qi);
-//						if(freeStoreBuffer.getQ()==0)
-//							freeStoreBuffer.setV(longRegisterValue.value);
-//						Memory.storeDoubleWord(freeStoreBuffer.getAddress(), (long) freeStoreBuffer.getV());
-//						break;
-//					case "S.D":
-//						FloatingRegister doubleRegister =  RegisterFile.readFloatRegister(R1);
-//						freeStoreBuffer.setQ(doubleRegister.Qi);
-//						if(freeStoreBuffer.getQ()==0)
-//							freeStoreBuffer.setV(doubleRegister.value);
-//						Memory.storeDouble(freeStoreBuffer.getAddress(), freeStoreBuffer.getV());
-//       				    System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
-//						break;
-//				    case "L.S":
-//						float wordValue = Memory.loadSingle(freeLoadBuffer.getAddress());
-//						// this weird hack is because precision gets fucked during conversion from float
-//						// to double techincally gets more precise, but still is not something we wanted
-//						double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
-//						RegisterFile.writeRegister(R1, convertedWordValue, freeLoadBuffer.getTag());
-//						break;
-//					case "LW":
-//						int integerWordValue = Memory.loadWord(freeLoadBuffer.getAddress());
-//						RegisterFile.writeRegister(R1, integerWordValue, freeLoadBuffer.getTag());
-//						break;
-//					case "L.D":
-//						double doubleWordValue = Memory.loadDouble(freeLoadBuffer.getAddress());
-//						RegisterFile.writeRegister(R1, doubleWordValue, freeLoadBuffer.getTag());
-//						break;
-//					case "LD":
-//						double integerDoubleWordValue = Memory.loadDoubleWord(freeLoadBuffer.getAddress());
-//						RegisterFile.writeRegister(R1, integerDoubleWordValue, freeLoadBuffer.getTag());
-//						break;
-////				case "BNEQ":
-////					long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
-////					if (R1 != R2) {
-////						int instruction = Integer.parseInt(parsedInstruction[3]);
-////						i = instruction - 1; // -1 since we will increment at the end of the loop
-////
-////					}
-////					break;
-////				case "BEQZ":
-////					if (R1 == 0) {
-////						int instruction = Integer.parseInt(parsedInstruction[2]);
-////						i = instruction - 1; // -1 since we will increment at the end of the loop
-////					}
-////					break;
-//
-//
-//			}
+		
+		// the one who will publish
+		if(theStrongestOneAfterGojoOfCourse != -1)
+		{
+			// if it is in the add reservation stations
+			if(theStrongestOneAfterGojoOfCourse <= addReservationStationsSize)
+			{
+				ReservationStation publishingReservationStation = getReservationStationWithTag(theStrongestOneAfterGojoOfCourse);
+				if(publishingReservationStation == null)
+					throw new Exception("For some reason, one of the add reservation stations is not intialized");
+				publishingReservationStation.setBusy(false);
+				// compute result and publish ... 
+
+				
+			}
+			
+			// if it is in the multiplcation reservation stations, and so on...
 		}
+	}
+
+	public ReservationStation getReservationStationWithTag(int tag)
+	{
+		for(ReservationStation additionStation: addReservationStations)
+			if(additionStation.getTag() == tag)
+				return additionStation;
+
+		for(ReservationStation multiplicationStation: multiplyReservationStations)
+			if(multiplicationStation.getTag() == tag)
+				return multiplicationStation;
+
+		return null;
+	}
 
 
 
