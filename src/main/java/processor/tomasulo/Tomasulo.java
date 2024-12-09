@@ -33,8 +33,8 @@ public class Tomasulo
 
 	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
 																			// instructions, not yet
-	// executed :)
-	// size should be entered by user
+																			// executed :)
+																			// size should be entered by user
 	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
 
 	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
@@ -296,9 +296,8 @@ public class Tomasulo
 
 		private int tag;
 		private int issueTime; // tracks when did it enter the reservation station; used to
-								// determine
-								// priority
-								// when two instructions are writing at the same time
+								// determine priority when two instructions are writing at the same
+								// time
 		private final BooleanProperty busy;
 		private final StringProperty opcode; // Using StringProperty instead of a plain string.
 		private final DoubleProperty vj;
@@ -325,9 +324,9 @@ public class Tomasulo
 		}
 
 		// Getter and Setter for tag
-//		public IntegerProperty tagProperty() {
-//			return tag;
-//		}
+		//		public IntegerProperty tagProperty() {
+		//			return tag;
+		//		}
 
 		public int getTag()
 		{
@@ -484,7 +483,7 @@ public class Tomasulo
 		{
 			ReservationStation addReservationStation = new ReservationStation(tag++);
 			addReservationStations.add(addReservationStation);
-//			System.out.println("Add: "+addReservationStation.tag+"   "+i);
+			//			System.out.println("Add: "+addReservationStation.tag+"   "+i);
 
 		}
 
@@ -492,20 +491,20 @@ public class Tomasulo
 		{
 			ReservationStation multiplyReservationStation = new ReservationStation(tag++);
 			multiplyReservationStations.add(multiplyReservationStation);
-//			System.out.println("Multiply: "+multiplyReservationStation.tag+"   "+i);
+			//			System.out.println("Multiply: "+multiplyReservationStation.tag+"   "+i);
 		}
 
 		for (int i = 0; i < loadBuffersSize; i++)
 		{
 			LoadBuffer loadBuffer = new LoadBuffer(tag++);
 			loadBuffers.add(loadBuffer);
-//			System.out.println("Load: "+loadBuffer.tag+"   "+i);
+			//			System.out.println("Load: "+loadBuffer.tag+"   "+i);
 		}
 		for (int i = 0; i < storeBuffersSize; i++)
 		{
 			StoreBuffer storeBuffer = new StoreBuffer(tag++);
 			storeBuffers.add(storeBuffer);
-//			System.out.println("Store :" +storeBuffer.tag+"   "+i);
+			//			System.out.println("Store :" +storeBuffer.tag+"   "+i);
 		}
 	}
 
@@ -635,11 +634,10 @@ public class Tomasulo
 		}
 		else if (parseText.isLoadOperation(OPCode))
 		{
-			// logically, it should be long, since the memory is 64 bits, but a
-			// limitation
-			// of java is that arrays can only be addressed max by 2^32 - 1
-			// numbers, or an
-			// int only,
+			/*
+			 * logically, it should be long, since the memory is 64 bits, but a limitation of java
+			 * is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only
+			 */
 			LoadBuffer freeLoadBuffer = null;
 			for (LoadBuffer loadBuffer : loadBuffers)
 			{
@@ -668,11 +666,10 @@ public class Tomasulo
 		}
 		else if (parseText.isStoreOperation(OPCode))
 		{
-			// logically, it should be long, since the memory is 64 bits, but a
-			// limitation
-			// of java is that arrays can only be addressed max by 2^32 - 1
-			// numbers, or an
-			// int only,
+			/*
+			 * logically, it should be long, since the memory is 64 bits, but a limitation of java
+			 * is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only
+			 */
 			StoreBuffer freeStoreBuffer = null;
 			for (StoreBuffer storeBuffer : storeBuffers)
 				if (!storeBuffer.isBusy())
@@ -698,8 +695,7 @@ public class Tomasulo
 				if (R1.Qi == 0) freeStoreBuffer.setV(R1.value);
 			}
 			// don't need the if since the else will always be true, but it is
-			// left for
-			// readibility's sake
+			// left for readibility's sake
 			else if (parseText.isFloatStoreOperation(OPCode))
 			{
 				FloatingRegister F1 = RegisterFile.readFloatRegister(parsedInstruction[1]);
@@ -717,24 +713,26 @@ public class Tomasulo
 		clockCycle++;
 	}
 
-	// method mainly does two things: 1) decrement the execution time by 1
-	// if it has
-	// all its operands (ie Qj and Qi are 0)
-	// 2) if the execution time is 0, compute and publish the result
-	// depending on it
-	// priority
-	// the priority of a instruction is determined by the issue time, the
-	// earlier
-	// the instruction came to the station, the higher
-	// its priority. If two instructions have the same priority, then we
-	// determine
-	// its priority by the opcode, where load has
-	// the highest priority, then the multiplication, then the addition,
-	// then
-	// finally the division. If both instructions are the
-	// same opcode (3ashan 5awal), then we choose the one with the lower
-	// tag number
-	// (so M1 has a higher priority than M2 for example)
+	/*
+	 * Method mainly does two things:
+	 * 1) Decrement the execution time by 1 if it has all its operands
+	 *    (i.e., Qj and Qi are 0).
+	 * 2) If the execution time is 0, compute and publish the result.
+	 * 
+	 * Priority:
+	 * The priority of an instruction is determined by the issue time.
+	 * The earlier the instruction came to the station, the higher its priority.
+	 * If two instructions have the same priority, then we determine their
+	 * priority by the opcode:
+	 * - Load has the highest priority,
+	 * - Then multiplication,
+	 * - Then addition,
+	 * - Then finally division.
+	 * If both instructions have the same opcode (3ashan 5awal), then we
+	 * choose the one with the lower tag number (so M1 has a higher priority
+	 * than M2, for example).
+	 */
+
 	private void executeAndWrite() throws Exception
 	{
 		int lowestIssueTime = Integer.MAX_VALUE;
@@ -814,8 +812,7 @@ public class Tomasulo
 				if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
 				{
 					logUpdate("Reservation station " + publishingStation.tag + " is publishing!");
-					// ALU will figure out whether its single/double, and if its subtraction or
-					// addition
+					// ALU will figure out whether its single/double, and if its subtraction or addition
 					double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 							publishingStation.getVk());
 					publishFloatResult(theStrongestOneAfterGojoOfCourse, result);
@@ -833,6 +830,15 @@ public class Tomasulo
 			// if it is in the multiplcation reservation stations, and so on...
 			else if (theStrongestOneAfterGojoOfCourse <= addReservationStationsSize + multiplyReservationStationsSize)
 			{
+				ReservationStation publishingStation = getReservationStationWithTag(theStrongestOneAfterGojoOfCourse);
+				if (publishingStation == null)
+					throw new Exception("For some reason, one of the multiplication reservation stations is not intialized");
+				publishingStation.setBusy(false);
+				logUpdate("Reservation station " + publishingStation.tag + " is publishing!");
+				// ALU will figure out whether its single/double, and if its multiplication or division 
+				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
+						publishingStation.getVk());
+				publishFloatResult(theStrongestOneAfterGojoOfCourse, result);
 
 			}
 		}
