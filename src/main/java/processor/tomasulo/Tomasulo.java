@@ -58,7 +58,7 @@ public class Tomasulo
 
 	private void logUpdate(String message)
 	{
-		if (updateLog != null) updateLog.accept(message);
+		if (updateLog != null) updateLog.accept(message + "\n");
 
 	}
 
