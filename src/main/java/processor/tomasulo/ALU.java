@@ -14,10 +14,12 @@ public class ALU {
 			System.out.println("Adding single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 + F3);
 			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			Tomasulo.addReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, convertedResult, tag);
 		} else {
 			System.out.println("Adding double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 + F3;
+			Tomasulo.addReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, result, tag);
 		}
 	}
@@ -27,10 +29,12 @@ public class ALU {
 			System.out.println("Subtracting single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 - F3);
 			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			Tomasulo.addReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, convertedResult, tag);
 		} else {
 			System.out.println("Subtracting double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 - F3;
+			Tomasulo.addReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, result, tag);
 		}
 	}
@@ -40,10 +44,12 @@ public class ALU {
 			System.out.println("Multiplying single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 * F3);
 			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, convertedResult, tag);
 		} else {
 			System.out.println("Multiplying double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 * F3;
+			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, result, tag);
 		}
 	}
@@ -53,10 +59,12 @@ public class ALU {
 			System.out.println("Dividing single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 / F3);
 			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, convertedResult, tag);
 		} else {
 			System.out.println("Dividing double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 / F3;
+			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, result, tag);
 		}
 	}
