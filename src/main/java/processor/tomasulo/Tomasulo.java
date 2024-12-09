@@ -65,9 +65,9 @@ public class Tomasulo
 	{
 
 		private int issueTime; // tracks when did it enter the reservation station; used to
-								// determine
-								// priority
-								// when two instructions are writing at the same time
+								// determine priority when two instructions are writing at the same time
+		private final StringProperty opcode;
+
 		private final BooleanProperty busy;
 		private final IntegerProperty tag;
 		private final IntegerProperty address;
@@ -78,6 +78,7 @@ public class Tomasulo
 		public LoadBuffer(int tag)
 		{
 			this.issueTime = 0;
+			this.opcode = new SimpleStringProperty("");
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
 			this.address = new SimpleIntegerProperty(0);
@@ -156,6 +157,21 @@ public class Tomasulo
 		{
 			this.issueTime = issueTime;
 		}
+
+		public StringProperty opcodeProperty()
+		{
+			return opcode;
+		}
+
+		public String getOpcode()
+		{
+			return opcode.get();
+		}
+
+		public void setOpcode(String opcode)
+		{
+			this.opcode.set(opcode);
+		}
 	}
 
 	public class StoreBuffer
@@ -170,6 +186,7 @@ public class Tomasulo
 		private final DoubleProperty V;
 		private final IntegerProperty Q;
 		private final IntegerProperty address;
+		private final StringProperty opcode;
 
 		private final IntegerProperty executionTime;
 
@@ -177,6 +194,7 @@ public class Tomasulo
 		public StoreBuffer(int tag)
 		{
 			this.issueTime = 0;
+			this.opcode = new SimpleStringProperty("");
 			this.tag = new SimpleIntegerProperty(tag);
 			this.busy = new SimpleBooleanProperty(false);
 			this.V = new SimpleDoubleProperty(0);
@@ -289,6 +307,22 @@ public class Tomasulo
 		{
 			this.issueTime = issueTime;
 		}
+
+		public StringProperty opcodeProperty()
+		{
+			return opcode;
+		}
+
+		public String getOpcode()
+		{
+			return opcode.get();
+		}
+
+		public void setOpcode(String opcode)
+		{
+			this.opcode.set(opcode);
+		}
+
 	}
 
 	public static class ReservationStation
@@ -661,6 +695,7 @@ public class Tomasulo
 			freeLoadBuffer.setBusy(true);
 			freeLoadBuffer.setAddress(memoryAddress);
 			freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
+			freeLoadBuffer.setOpcode(OPCode);
 			RegisterFile.writeTagToRegisterFile(R1, freeLoadBuffer.getTag());
 
 		}
@@ -686,12 +721,11 @@ public class Tomasulo
 			}
 
 			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
+
 			if (parseText.isIntegerStoreOperation(OPCode))
 			{
 				IntegerRegister R1 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
-
 				freeStoreBuffer.setQ(R1.Qi); // if its 0, woo, if not, it saves it :)
-				freeStoreBuffer.setQ(0); // since it only reads one register :)
 				if (R1.Qi == 0) freeStoreBuffer.setV(R1.value);
 			}
 			// don't need the if since the else will always be true, but it is
@@ -699,15 +733,14 @@ public class Tomasulo
 			else if (parseText.isFloatStoreOperation(OPCode))
 			{
 				FloatingRegister F1 = RegisterFile.readFloatRegister(parsedInstruction[1]);
-
 				freeStoreBuffer.setQ(F1.Qi); // if its 0, woo, if not, it saves it :)
-				freeStoreBuffer.setQ(0); // since it only reads one register :)
 				if (F1.Qi == 0) freeStoreBuffer.setV(F1.value);
 			}
 
 			freeStoreBuffer.setBusy(true);
 			freeStoreBuffer.setAddress(memoryAddress);
 			freeStoreBuffer.setExecutionTime(StoreBufferExecutionTime);
+			freeStoreBuffer.setOpcode(OPCode);
 		}
 
 		clockCycle++;
@@ -720,6 +753,7 @@ public class Tomasulo
 	 * 2) If the execution time is 0, compute and publish the result.
 	 * 
 	 * Priority:
+	 * Whenever two instructions publish at the same time, we need to prioritize one over the other.
 	 * The priority of an instruction is determined by the issue time.
 	 * The earlier the instruction came to the station, the higher its priority.
 	 * If two instructions have the same priority, then we determine their
@@ -799,48 +833,81 @@ public class Tomasulo
 			}
 		}
 
-		// the one who will publish
-		if (theStrongestOneAfterGojoOfCourse != -1)
+		if (theStrongestOneAfterGojoOfCourse != -1) publish(theStrongestOneAfterGojoOfCourse);
+	}
+
+	private void publish(int tag) throws Exception
+	{
+		// if it is in the add reservation stations
+		if (tag <= addReservationStationsSize)
 		{
-			// if it is in the add reservation stations
-			if (theStrongestOneAfterGojoOfCourse <= addReservationStationsSize)
+			ReservationStation publishingStation = getReservationStationWithTag(tag);
+			if (publishingStation == null)
+				throw new Exception("For some reason, one of the add reservation stations is not intialized");
+			publishingStation.setBusy(false);
+			if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
 			{
-				ReservationStation publishingStation = getReservationStationWithTag(theStrongestOneAfterGojoOfCourse);
-				if (publishingStation == null)
-					throw new Exception("For some reason, one of the add reservation stations is not intialized");
-				publishingStation.setBusy(false);
-				if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
-				{
-					logUpdate("Reservation station " + publishingStation.tag + " is publishing!");
-					// ALU will figure out whether its single/double, and if its subtraction or addition
-					double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
-							publishingStation.getVk());
-					publishFloatResult(theStrongestOneAfterGojoOfCourse, result);
-				}
-
-				else if (parseText.isIntegerAdditionOperation(publishingStation.getOpcode()))
-				{
-					logUpdate("Reservation station " + publishingStation.tag + " is publishing!");
-					long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
-							(short) publishingStation.getQk());
-					publishIntegerResult(theStrongestOneAfterGojoOfCourse, result);
-				}
-
-			}
-			// if it is in the multiplcation reservation stations, and so on...
-			else if (theStrongestOneAfterGojoOfCourse <= addReservationStationsSize + multiplyReservationStationsSize)
-			{
-				ReservationStation publishingStation = getReservationStationWithTag(theStrongestOneAfterGojoOfCourse);
-				if (publishingStation == null)
-					throw new Exception("For some reason, one of the multiplication reservation stations is not intialized");
-				publishingStation.setBusy(false);
 				logUpdate("Reservation station " + publishingStation.tag + " is publishing!");
-				// ALU will figure out whether its single/double, and if its multiplication or division 
+				// ALU will figure out whether its single/double, and if its subtraction or addition
 				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 						publishingStation.getVk());
-				publishFloatResult(theStrongestOneAfterGojoOfCourse, result);
-
+				publishFloatResult(tag, result);
 			}
+
+			else if (parseText.isIntegerAdditionOperation(publishingStation.getOpcode()))
+			{
+				logUpdate("Reservation station " + publishingStation.getTag() + " is publishing!");
+				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
+						(short) publishingStation.getQk());
+				publishIntegerResult(tag, result);
+			}
+
+		}
+		// if it is in the multiplication reservation stations, and so on...
+		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize)
+		{
+			ReservationStation publishingStation = getReservationStationWithTag(tag);
+			if (publishingStation == null) throw new Exception(
+					"For some reason, one of the multiplication reservation stations is not intialized");
+			publishingStation.setBusy(false);
+			logUpdate("Reservation station " + publishingStation.getTag() + " is publishing!");
+			// ALU will figure out whether its single/double, and if its multiplication or division 
+			double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
+					publishingStation.getVk());
+			publishFloatResult(tag, result);
+
+		}
+		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize)
+		{
+			LoadBuffer publishingBuffer = getLoadBufferWithTag(tag);
+			if (publishingBuffer == null)
+				throw new Exception("For some reason, one of the load buffers is not intialized");
+			publishingBuffer.setBusy(false);
+			logUpdate("Load buffer " + publishingBuffer.getTag() + " is publishing!");
+			switch (publishingBuffer.getOpcode())
+			{
+			case "LW":
+				int word = Memory.loadWord(publishingBuffer.getAddress());
+				publishIntegerResult(publishingBuffer.getTag(), word);
+
+				break;
+			case "LD":
+				long doubleWord = Memory.loadDoubleWord(publishingBuffer.getAddress());
+				publishIntegerResult(publishingBuffer.getTag(), doubleWord);
+				break;
+			case "L.S":
+				float wordValue = Memory.loadSingle(publishingBuffer.getAddress());
+				// this weird hack is because precision gets fucked during conversion from float
+				// to double techincally gets more precise, but still is not something we wanted
+				double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
+				publishFloatResult(tag, convertedWordValue);
+				break;
+			case "L.D":
+				double doubleWordValue = Memory.loadDouble(publishingBuffer.getAddress());
+				publishFloatResult(tag, doubleWordValue);
+				break;
+			}
+
 		}
 	}
 
@@ -965,13 +1032,21 @@ public class Tomasulo
 
 	}
 
-	public ReservationStation getReservationStationWithTag(int tag)
+	private ReservationStation getReservationStationWithTag(int tag)
 	{
 		for (ReservationStation additionStation : addReservationStations)
 			if (additionStation.getTag() == tag) return additionStation;
 
 		for (ReservationStation multiplicationStation : multiplyReservationStations)
 			if (multiplicationStation.getTag() == tag) return multiplicationStation;
+
+		return null;
+	}
+
+	private LoadBuffer getLoadBufferWithTag(int tag)
+	{
+		for (LoadBuffer loadBuffer : loadBuffers)
+			if (loadBuffer.getTag() == tag) return loadBuffer;
 
 		return null;
 	}

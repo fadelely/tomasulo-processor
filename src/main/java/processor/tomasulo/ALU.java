@@ -44,7 +44,6 @@ public class ALU
 	{
 		switch (OPCode)
 		{
-
 		case "MUL.D":
 			return ALU.multiplyFloating(F2, F3, false);
 		case "DIV.D":
@@ -56,29 +55,30 @@ public class ALU
 		}
 		throw new Exception(
 				"Multiply floating operation has been called in the ALU despite it not being a multiply floating operation");
-
 	}
 
-	//				    case "SW":
-	//						IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
-	//						freeStoreBuffer.setQ(integerRegisterValue.Qi);
-	//						if(freeStoreBuffer.getQ()==0)
-	//							freeStoreBuffer.setV(integerRegisterValue.value);
-	//						Memory.storeWord(freeStoreBuffer.getAddress(), (int) freeStoreBuffer.getV());
-	//						break;
+
+		//					    case "SW":
+		//							IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
+		//							freeStoreBuffer.setQ(integerRegisterValue.Qi);
+		//							if(freeStoreBuffer.getQ()==0)
+		//								freeStoreBuffer.setV(integerRegisterValue.value);
+		//							Memory.storeWord(freeStoreBuffer.getAddress(), (int) freeStoreBuffer.getV());
+		//							break;
+		//						case "SD":
+		//							IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
+		//							freeStoreBuffer.setQ(longRegisterValue.Qi);
+		//							if(freeStoreBuffer.getQ()==0)
+		//								freeStoreBuffer.setV(longRegisterValue.value);
+		//							Memory.storeDoubleWord(freeStoreBuffer.getAddress(), (long) freeStoreBuffer.getV());
+		//							break;
+	
 	//					case "S.S":
 	//						FloatingRegister  floatRegister =  RegisterFile.readFloatRegister(R1);
 	//						freeStoreBuffer.setQ(floatRegister.Qi);
 	//						if(freeStoreBuffer.getQ()==0)
 	//							freeStoreBuffer.setV(floatRegister.value);
 	//						Memory.storeSingle(freeStoreBuffer.getAddress(), (float) freeStoreBuffer.getV());
-	//						break;
-	//					case "SD":
-	//						IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
-	//						freeStoreBuffer.setQ(longRegisterValue.Qi);
-	//						if(freeStoreBuffer.getQ()==0)
-	//							freeStoreBuffer.setV(longRegisterValue.value);
-	//						Memory.storeDoubleWord(freeStoreBuffer.getAddress(), (long) freeStoreBuffer.getV());
 	//						break;
 	//					case "S.D":
 	//						FloatingRegister doubleRegister =  RegisterFile.readFloatRegister(R1);
@@ -87,25 +87,6 @@ public class ALU
 	//							freeStoreBuffer.setV(doubleRegister.value);
 	//						Memory.storeDouble(freeStoreBuffer.getAddress(), freeStoreBuffer.getV());
 	//       				    System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
-	//						break;
-	//				    case "L.S":
-	//						float wordValue = Memory.loadSingle(freeLoadBuffer.getAddress());
-	//						// this weird hack is because precision gets fucked during conversion from float
-	//						// to double techincally gets more precise, but still is not something we wanted
-	//						double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
-	//						RegisterFile.writeRegister(R1, convertedWordValue, freeLoadBuffer.getTag());
-	//						break;
-	//					case "LW":
-	//						int integerWordValue = Memory.loadWord(freeLoadBuffer.getAddress());
-	//						RegisterFile.writeRegister(R1, integerWordValue, freeLoadBuffer.getTag());
-	//						break;
-	//					case "L.D":
-	//						double doubleWordValue = Memory.loadDouble(freeLoadBuffer.getAddress());
-	//						RegisterFile.writeRegister(R1, doubleWordValue, freeLoadBuffer.getTag());
-	//						break;
-	//					case "LD":
-	//						double integerDoubleWordValue = Memory.loadDoubleWord(freeLoadBuffer.getAddress());
-	//						RegisterFile.writeRegister(R1, integerDoubleWordValue, freeLoadBuffer.getTag());
 	//						break;
 	////				case "BNEQ":
 	////					long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);

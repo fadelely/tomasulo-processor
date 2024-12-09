@@ -8,15 +8,18 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ParseText {
+public class ParseText
+{
 
-	public ArrayList<String> parseTextFile() throws IOException {
+	public ArrayList<String> parseTextFile() throws IOException
+	{
 		File instructionList = new File("./resources/instructions.txt");
 		BufferedReader br = new BufferedReader(new FileReader(instructionList));
 		String str;
 		ArrayList<String> instructions = new ArrayList<String>(); // these are all the instructions, not yet executed :)
 		// puts all the instructions in an array, so we can branch easily later
-		while ((str = br.readLine()) != null) {
+		while ((str = br.readLine()) != null)
+		{
 			instructions.add(str);
 		}
 		br.close();
@@ -24,7 +27,8 @@ public class ParseText {
 	}
 
 	// addition or subtraction really
-	boolean isFloatAdditionOperation(String opcode) {
+	boolean isFloatAdditionOperation(String opcode)
+	{
 		// why hashset one might ask
 		// malakash da3awa
 		Set<String> possibleOperations = new HashSet<String>();
@@ -35,18 +39,19 @@ public class ParseText {
 		return possibleOperations.contains(opcode);
 
 	}
-	
+
 	boolean isIntegerAdditionOperation(String opcode)
 	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("ADDI");
 		possibleOperations.add("SUBI");
 		return possibleOperations.contains(opcode);
-		
+
 	}
 
 	// division or multiplication
-	boolean isMultiplyOperation(String opcode) {
+	boolean isMultiplyOperation(String opcode)
+	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("MUL.D");
 		possibleOperations.add("MUL.S");
@@ -56,7 +61,8 @@ public class ParseText {
 
 	}
 
-	boolean isLoadOperation(String opcode) {
+	boolean isLoadOperation(String opcode)
+	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("LD");
 		possibleOperations.add("LW");
@@ -66,7 +72,8 @@ public class ParseText {
 
 	}
 
-	boolean isStoreOperation(String opcode) {
+	boolean isStoreOperation(String opcode)
+	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("SD");
 		possibleOperations.add("SW");
@@ -76,7 +83,8 @@ public class ParseText {
 
 	}
 
-	boolean isFloatStoreOperation(String opcode) {
+	boolean isFloatStoreOperation(String opcode)
+	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("S.D");
 		possibleOperations.add("S.S");
@@ -84,7 +92,8 @@ public class ParseText {
 
 	}
 
-	boolean isIntegerStoreOperation(String opcode) {
+	boolean isIntegerStoreOperation(String opcode)
+	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("SD");
 		possibleOperations.add("SW");
@@ -92,7 +101,8 @@ public class ParseText {
 
 	}
 
-	boolean isALUOperation(String opcode) {
+	boolean isALUOperation(String opcode)
+	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("ADD.D");
 		possibleOperations.add("ADD.S");
@@ -105,5 +115,4 @@ public class ParseText {
 		return possibleOperations.contains(opcode);
 	}
 
-	
 }
