@@ -11,6 +11,7 @@ local.properties
 .settings/
 .loadpath
 .recommenders
+.idea
 /target/
 
 # External tool builders
@@ -72,11 +73,11 @@ local.properties
 .idea/*
 
 # Allow some project-specific settings
-!.idea/codeStyles/
-!.idea/deployment.xml
-!.idea/modules.xml
-!.idea/vcs.xml
-!.idea/workspace.xml
+.idea/codeStyles/
+.idea/deployment.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
 
 # Ignore user-specific or OS-specific settings
 .idea/workspace.xml
