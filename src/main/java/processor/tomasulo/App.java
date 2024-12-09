@@ -183,7 +183,7 @@ public class App extends Application{
             tomasulo.setUpdateLogCallback(logArea::appendText);
             new Thread(() -> {
                 try {
-                    tomasulo.startExecution();
+                    tomasulo.executeCycle();
                 } catch (IOException ex) {
                     Platform.runLater(() -> logArea.appendText("Error: " + ex.getMessage() + "\n"));
                 }
@@ -225,8 +225,13 @@ public class App extends Application{
         tomasulo.init();
         Memory.storeDouble(0, 5);
         Memory.storeDouble(8, 7);
-//        tomasulo.startExecution();
-        launch();
+        tomasulo.executeCycle();
+        tomasulo.executeCycle();
+        tomasulo.executeCycle();
+        tomasulo.executeCycle();
+        tomasulo.executeCycle();
+        tomasulo.executeCycle();
+//        launch();
     }
 
 }

@@ -13,64 +13,11 @@ import processor.tomasulo.RegisterFile.IntegerRegister;
 
 public class Tomasulo
 {
-	private Consumer<String> updateLog;
-
-	public static int addReservationStationsSize = 4;
-	public static int multiplyReservationStationsSize = 4;
-	public static int loadBuffersSize = 4;
-	public static int storeBuffersSize = 4;
-
-	public static int LoadBufferExecutionTime = 20;
-
-	public static int StoreBufferExecutionTime = 1;
-
-	public static int AddReservationStationExecutionTime = 2;
-
-	public static int MultiplyReservationStationExecutionTime = 4;
-
-	public static RegisterFile registerFile = new RegisterFile();
-	public static Memory memory = new Memory();
-	public static ALU alu = new ALU();
-
-	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
-																			// instructions, not yet
-																			// executed :)
-																			// size should be entered by user
-	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
-
-	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
-
-	public static ObservableList<LoadBuffer> loadBuffers = FXCollections.observableArrayList();
-	public static ObservableList<StoreBuffer> storeBuffers = FXCollections.observableArrayList();
-
-	private int currentInstructionIndex = 0; // Index of the instruction being executed
-	private int remainingClockCycles = 0; // Clock cycles remaining for the current instruction
-	private boolean fullAddStations = false;
-	private boolean fullMultiplyStations = false;
-	private boolean fullLoadBuffers = false;
-	private boolean fullStoreBuffers = false;
-	private boolean stalled = false; // Stalled state
-	private int clockCycle = 1; // Current clock cycle
-	private String currentOPCode = ""; // OPCode of the instruction being executed
-
-	ParseText parseText = new ParseText();
-
-	public void setUpdateLogCallback(Consumer<String> callback)
-	{
-		this.updateLog = callback;
-	}
-
-	private void logUpdate(String message)
-	{
-		if (updateLog != null) updateLog.accept(message + "\n");
-
-	}
-
 	public class LoadBuffer
 	{
 
 		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
-								// determine priority when two instructions are writing at the same time
+		// determine priority when two instructions are writing at the same time
 		private final StringProperty opcode;
 
 		private final BooleanProperty busy;
@@ -188,9 +135,9 @@ public class Tomasulo
 	{
 
 		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
-								// determine
-								// priority
-								// when two instructions are writing at the same time
+		// determine
+		// priority
+		// when two instructions are writing at the same time
 		private final BooleanProperty busy;
 		private final IntegerProperty tag;
 		private final DoubleProperty V;
@@ -344,8 +291,8 @@ public class Tomasulo
 
 		private int tag;
 		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
-								// determine priority when two instructions are writing at the same
-								// time
+		// determine priority when two instructions are writing at the same
+		// time
 		private final BooleanProperty busy;
 		private final StringProperty opcode; // Using StringProperty instead of a plain string.
 		private final DoubleProperty vj;
@@ -529,7 +476,61 @@ public class Tomasulo
 		}
 	}
 
-	public void init()
+	private Consumer<String> updateLog;
+
+	public static int addReservationStationsSize = 4;
+	public static int multiplyReservationStationsSize = 4;
+	public static int loadBuffersSize = 4;
+	public static int storeBuffersSize = 4;
+
+	public static int LoadBufferExecutionTime = 2;
+
+	public static int StoreBufferExecutionTime = 1;
+
+	public static int AddReservationStationExecutionTime = 2;
+
+	public static int MultiplyReservationStationExecutionTime = 4;
+
+	public static RegisterFile registerFile = new RegisterFile();
+	public static Memory memory = new Memory();
+	public static ALU alu = new ALU();
+
+	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
+																			// instructions, not yet
+																			// executed :)
+																			// size should be entered by user
+	public static Iterator<String> instructionIterator;
+	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
+
+	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
+
+	public static ObservableList<LoadBuffer> loadBuffers = FXCollections.observableArrayList();
+	public static ObservableList<StoreBuffer> storeBuffers = FXCollections.observableArrayList();
+
+	private int currentInstructionIndex = 0; // Index of the instruction being executed
+	private int remainingClockCycles = 0; // Clock cycles remaining for the current instruction
+	private boolean fullAddStations = false;
+	private boolean fullMultiplyStations = false;
+	private boolean fullLoadBuffers = false;
+	private boolean fullStoreBuffers = false;
+	private boolean stalled = false; // Stalled state
+	private int clockCycle = 1; // Current clock cycle
+	private String currentOPCode = ""; // OPCode of the instruction being executed
+
+	ParseText parseText = new ParseText();
+
+	public void setUpdateLogCallback(Consumer<String> callback)
+	{
+		this.updateLog = callback;
+	}
+
+	private void logUpdate(String message)
+	{
+		if (updateLog != null) updateLog.accept(message + "\n");
+
+	}
+
+	public void init() throws IOException
 	{
 		int tag = 1;
 		for (int i = 0; i < addReservationStationsSize; i++)
@@ -559,30 +560,29 @@ public class Tomasulo
 			storeBuffers.add(storeBuffer);
 			//			System.out.println("Store :" +storeBuffer.tag+"   "+i);
 		}
+
+		instructions = parseText.parseTextFile();
+		instructionIterator = instructions.iterator();
 	}
 
-	public void startExecution() throws IOException
+	public void executeCycle() throws IOException
 	{
-		instructions = parseText.parseTextFile();
-		Iterator<String> instructionIterator = instructions.iterator();
-		String instruction = "";
-		while (true)
-		{
-			System.out.println("In clock cycle: " + clockCycle);
-			instruction = "";
-			if (!stalled && instructionIterator.hasNext()) instruction = instructionIterator.next();
 
-			try
-			{
-				executeAndWrite();
-				if (!instruction.equals("")) issue(instruction);
-			} catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-			stalled = fullAddStations && fullLoadBuffers && fullMultiplyStations && fullStoreBuffers;
-			clockCycle++;
+		String instruction = "";
+
+		System.out.println("In clock cycle: " + clockCycle);
+		instruction = "";
+		if (!stalled && instructionIterator.hasNext()) instruction = instructionIterator.next();
+		try
+		{
+			executeAndWrite();
+			if (!instruction.equals("")) issue(instruction);
+		} catch (Exception e)
+		{
+			e.printStackTrace();
 		}
+		stalled = fullAddStations && fullLoadBuffers && fullMultiplyStations && fullStoreBuffers;
+		clockCycle++;
 	}
 
 	public void issue(String instruction) throws IOException
