@@ -58,36 +58,6 @@ public class ALU
 	}
 
 
-		//					    case "SW":
-		//							IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
-		//							freeStoreBuffer.setQ(integerRegisterValue.Qi);
-		//							if(freeStoreBuffer.getQ()==0)
-		//								freeStoreBuffer.setV(integerRegisterValue.value);
-		//							Memory.storeWord(freeStoreBuffer.getAddress(), (int) freeStoreBuffer.getV());
-		//							break;
-		//						case "SD":
-		//							IntegerRegister longRegisterValue =  RegisterFile.readIntegerRegister(R1);
-		//							freeStoreBuffer.setQ(longRegisterValue.Qi);
-		//							if(freeStoreBuffer.getQ()==0)
-		//								freeStoreBuffer.setV(longRegisterValue.value);
-		//							Memory.storeDoubleWord(freeStoreBuffer.getAddress(), (long) freeStoreBuffer.getV());
-		//							break;
-	
-	//					case "S.S":
-	//						FloatingRegister  floatRegister =  RegisterFile.readFloatRegister(R1);
-	//						freeStoreBuffer.setQ(floatRegister.Qi);
-	//						if(freeStoreBuffer.getQ()==0)
-	//							freeStoreBuffer.setV(floatRegister.value);
-	//						Memory.storeSingle(freeStoreBuffer.getAddress(), (float) freeStoreBuffer.getV());
-	//						break;
-	//					case "S.D":
-	//						FloatingRegister doubleRegister =  RegisterFile.readFloatRegister(R1);
-	//						freeStoreBuffer.setQ(doubleRegister.Qi);
-	//						if(freeStoreBuffer.getQ()==0)
-	//							freeStoreBuffer.setV(doubleRegister.value);
-	//						Memory.storeDouble(freeStoreBuffer.getAddress(), freeStoreBuffer.getV());
-	//       				    System.out.println(Memory.loadDouble(freeStoreBuffer.getAddress()));
-	//						break;
 	////				case "BNEQ":
 	////					long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
 	////					if (R1 != R2) {

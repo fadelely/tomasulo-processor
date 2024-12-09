@@ -3,6 +3,7 @@ package processor.tomasulo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Scanner;
 import java.util.function.Consumer;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -562,6 +563,8 @@ public class Tomasulo
 			{
 				e.printStackTrace();
 			}
+			Scanner scanner = new Scanner(System.in);
+			scanner.next();
 		}
 	}
 
@@ -824,10 +827,26 @@ public class Tomasulo
 			{
 				if (storeBuffer.getExecutionTime() > 0 && storeBuffer.getQ() == 0)
 					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
-				else if (storeBuffer.getExecutionTime() == 0 && lowestIssueTime > storeBuffer.getIssueTime())
+				// since store never writes to the bus, it can finish execution once is result is ready, no  matter
+				// who is publishing on the bus
+				// can multiple people publish on bus?
+				else if (storeBuffer.getExecutionTime() == 0)
 				{
-					lowestIssueTime = storeBuffer.getIssueTime();
-					theStrongestOneAfterGojoOfCourse = storeBuffer.getTag();
+					switch (storeBuffer.getOpcode())
+					{
+					case "SW":
+						Memory.storeWord(storeBuffer.getAddress(), (int) storeBuffer.getV());
+						break;
+					case "SD":
+						Memory.storeDoubleWord(storeBuffer.getAddress(), (long) storeBuffer.getV());
+						break;
+					case "S.S":
+						Memory.storeSingle(storeBuffer.getAddress(), (float) storeBuffer.getV());
+						break;
+					case "S.D":
+						Memory.storeDouble(storeBuffer.getAddress(), storeBuffer.getV());
+						break;
+					}
 				}
 
 			}
@@ -898,7 +917,7 @@ public class Tomasulo
 			case "L.S":
 				float wordValue = Memory.loadSingle(publishingBuffer.getAddress());
 				// this weird hack is because precision gets fucked during conversion from float
-				// to double techincally gets more precise, but still is not something we wanted
+				// to double; techincally gets more precise, but still is not something we wanted
 				double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
 				publishFloatResult(tag, convertedWordValue);
 				break;
@@ -912,7 +931,8 @@ public class Tomasulo
 	}
 
 	// publish by asking every single reservation station and the registers if it
-	// needs this result mafrood el 3aks, el reservation station heya el tshoof, bas
+	// needs this result 
+	// mafrood el 3aks, el reservation station heya el tshoof law 3ayza 7aga mein el bus, bas
 	// ana mesh 3ayz a3mel listeners, w el enen nafs el result
 	public void publishFloatResult(int tag, double result)
 	{
