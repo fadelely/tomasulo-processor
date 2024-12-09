@@ -558,13 +558,13 @@ public class Tomasulo
 			{
 				executeAndWrite();
 				if (!instruction.equals("")) issue(instruction);
-				clockCycle++;
 			} catch (Exception e)
 			{
 				e.printStackTrace();
 			}
-			Scanner scanner = new Scanner(System.in);
-			scanner.next();
+//			Scanner scanner = new Scanner(System.in);
+//			scanner.next();
+			clockCycle++;
 		}
 	}
 
@@ -746,7 +746,6 @@ public class Tomasulo
 			freeStoreBuffer.setOpcode(OPCode);
 		}
 
-		clockCycle++;
 	}
 
 	/*

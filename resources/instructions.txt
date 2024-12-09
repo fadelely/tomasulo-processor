@@ -1,2 +1,3 @@
-ADD.D F2,F2,F2
-S.D F2,0
+L.D F2,0
+L.D F3,8
+ADD.S F1,F2,F3

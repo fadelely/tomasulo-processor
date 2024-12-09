@@ -63,7 +63,7 @@ public class Memory {
 	}
 
 	public static double loadDouble(int address) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+		ByteBuffer byteBuffer = ByteBuffer.allocate(10);
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
 		byte firstByte = Memory.addresses[address];
 		byte secondByte = Memory.addresses[address + 1];

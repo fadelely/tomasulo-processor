@@ -221,9 +221,12 @@ public class App extends Application{
 
 
     public static void main(String[] args) throws IOException {
+
         tomasulo.init();
-//        tomasulo.startExecution();
-        launch();
+        Memory.storeSingle(0, 5);
+        Memory.storeSingle(8, 7);
+        tomasulo.startExecution();
+//        launch();
     }
 
 }
