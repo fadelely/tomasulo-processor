@@ -440,10 +440,17 @@ public class Tomasulo {
 			if (!stalled && instructionIterator.hasNext())
 				instruction = instructionIterator.next();
 			
-			executeAndWrite();
-			if(!instruction.equals(""))
-				issue(instruction);
-			clockCycle++;
+			try
+			{
+				executeAndWrite();
+				if(!instruction.equals(""))
+					issue(instruction);
+				clockCycle++;
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -455,7 +462,7 @@ public class Tomasulo {
 		String[] parsedInstruction = instruction.split(regex);
 		String OPCode = parsedInstruction[0];
 
-		if (parseText.isAdditionOperation(OPCode)) {
+		if (parseText.isFloatAdditionOperation(OPCode)) {
 			// check for empty addition stations, if none are avaliable, stall
 			ReservationStation freeReservationStation = null;
 			for (ReservationStation addReservationStation : addReservationStations)
@@ -513,7 +520,7 @@ public class Tomasulo {
 				freeReservationStation.setVk(F3.value);
 			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
 
-		} else if (OPCode.equals("ADDI") || OPCode.equals("SUBI")) {
+		} else if (parseText.isIntegerAdditionOperation(OPCode)){
 			ReservationStation freeReservationStation = null;
 			for (ReservationStation addReservationStation : addReservationStations)
 				if (!addReservationStation.isBusy()) {
@@ -691,13 +698,76 @@ public class Tomasulo {
 				if(publishingReservationStation == null)
 					throw new Exception("For some reason, one of the add reservation stations is not intialized");
 				publishingReservationStation.setBusy(false);
-				// compute result and publish ... 
-
+				if(parseText.isFloatAdditionOperation(publishingReservationStation.getOpcode()))
+				{
+					logUpdate("Reservation station " + publishingReservationStation.tag + " is publishing!");
+					// ALU will figure out whether its single/double, and if its subtraction or addition
+					double result = ALU.addFloatOperation(publishingReservationStation.getOpcode(), publishingReservationStation.getVj(), publishingReservationStation.getVk());
+					publishFloatResult(theStrongestOneAfterGojoOfCourse, result);
+				}
 				
+
 			}
 			
 			// if it is in the multiplcation reservation stations, and so on...
 		}
+	}
+	
+	// publish by asking every single reservation station and the registers if it needs this result
+	// mafrood el 3aks, el reservation station heya el tshoof, bas ana mesh 3ayz a3mel listeners, w el enen nafs el result
+	public void publishFloatResult(int tag, double result)
+	{
+		
+		for(ReservationStation multiplicationStation: multiplyReservationStations)
+		{
+			if(multiplicationStation.isBusy())
+			{
+				if(multiplicationStation.getQj() == tag)
+				{
+					multiplicationStation.setVj(result);
+					multiplicationStation.setQj(0);
+				}
+				
+				if(multiplicationStation.getQk() == tag)
+				{
+					multiplicationStation.setVk(result);
+					multiplicationStation.setQk(0);
+				}
+			}
+		}
+
+		for (ReservationStation additionStation : addReservationStations) {
+		    if (additionStation.isBusy()) {
+		        if (additionStation.getQj() == tag) {
+		            additionStation.setVj(result);
+		            additionStation.setQj(0);
+		        }
+
+		        if (additionStation.getQk() == tag) {
+		            additionStation.setVk(result);
+		            additionStation.setQk(0);
+		        }
+		    }
+		}
+
+		for(StoreBuffer storeBuffer: storeBuffers)
+		{
+			if(storeBuffer.isBusy() && storeBuffer.getQ()== tag )
+			{
+				storeBuffer.setQ(0);
+				storeBuffer.setV(result);
+			}
+		}
+		
+		for (FloatingRegister register : RegisterFile.floatingRegisters) {
+			if(register.Qi == tag)
+			{
+				register.Qi = 0;
+				register.value = result;
+			}
+		}
+
+		
 	}
 
 	public ReservationStation getReservationStationWithTag(int tag)

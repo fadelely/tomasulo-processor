@@ -24,7 +24,7 @@ public class ParseText {
 	}
 
 	// addition or subtraction really
-	boolean isAdditionOperation(String opcode) {
+	boolean isFloatAdditionOperation(String opcode) {
 		// why hashset one might ask
 		// malakash da3awa
 		Set<String> possibleOperations = new HashSet<String>();
@@ -34,6 +34,15 @@ public class ParseText {
 		possibleOperations.add("SUB.S");
 		return possibleOperations.contains(opcode);
 
+	}
+	
+	boolean isIntegerAdditionOperation(String opcode)
+	{
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("ADDI");
+		possibleOperations.add("SUBI");
+		return possibleOperations.contains(opcode);
+		
 	}
 
 	// division or multiplication
@@ -53,10 +62,6 @@ public class ParseText {
 		possibleOperations.add("LW");
 		possibleOperations.add("L.D");
 		possibleOperations.add("L.S");
-//		possibleOperations.add("SD");
-//		possibleOperations.add("SW");
-//		possibleOperations.add("S.D");
-//		possibleOperations.add("S.S");
 		return possibleOperations.contains(opcode);
 
 	}
@@ -100,4 +105,5 @@ public class ParseText {
 		return possibleOperations.contains(opcode);
 	}
 
+	
 }
