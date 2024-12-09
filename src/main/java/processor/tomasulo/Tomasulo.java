@@ -20,7 +20,7 @@ public class Tomasulo
 	public static int loadBuffersSize = 4;
 	public static int storeBuffersSize = 4;
 
-	public static int LoadBufferExecutionTime = 1;
+	public static int LoadBufferExecutionTime = 20;
 
 	public static int StoreBufferExecutionTime = 1;
 
@@ -45,6 +45,10 @@ public class Tomasulo
 
 	private int currentInstructionIndex = 0; // Index of the instruction being executed
 	private int remainingClockCycles = 0; // Clock cycles remaining for the current instruction
+	private boolean fullAddStations = false;
+	private boolean fullMultiplyStations = false;
+	private boolean fullLoadBuffers = false;
+	private boolean fullStoreBuffers = false;
 	private boolean stalled = false; // Stalled state
 	private int clockCycle = 1; // Current clock cycle
 	private String currentOPCode = ""; // OPCode of the instruction being executed
@@ -576,6 +580,7 @@ public class Tomasulo
 			{
 				e.printStackTrace();
 			}
+			stalled = fullAddStations && fullLoadBuffers && fullMultiplyStations && fullStoreBuffers;
 			clockCycle++;
 		}
 	}
@@ -602,7 +607,7 @@ public class Tomasulo
 			if (freeReservationStation == null)
 			{
 				logUpdate("Stalled due to full reservation station...");
-				stalled = true;
+				fullAddStations = true;
 				return;
 			}
 
@@ -633,6 +638,7 @@ public class Tomasulo
 			if (freeReservationStation == null)
 			{
 				logUpdate("Stalled due to full reservation station...");
+				fullMultiplyStations = true;
 				stalled = true;
 				return;
 			}
@@ -664,6 +670,7 @@ public class Tomasulo
 			if (freeReservationStation == null)
 			{
 				logUpdate("Stalled due to full reservation station...");
+				fullAddStations = true;
 				stalled = true;
 				return;
 			}
@@ -703,7 +710,7 @@ public class Tomasulo
 			if (freeLoadBuffer == null)
 			{
 				logUpdate("Stalled due to full reservation station...");
-				stalled = true;
+				fullLoadBuffers = true;
 				return;
 			}
 
@@ -735,7 +742,7 @@ public class Tomasulo
 			if (freeStoreBuffer == null)
 			{
 				logUpdate("Stalled due to full reservation station...");
-				stalled = true;
+				fullStoreBuffers = true;
 				return;
 			}
 
@@ -848,6 +855,7 @@ public class Tomasulo
 				// can multiple people publish on bus?
 				else if (storeBuffer.getExecutionTime() == 0)
 				{
+					fullStoreBuffers = false;
 					switch (storeBuffer.getOpcode())
 					{
 					case "SW":
@@ -880,6 +888,7 @@ public class Tomasulo
 			if (publishingStation == null)
 				throw new Exception("For some reason, one of the add reservation stations is not intialized");
 			publishingStation.setBusy(false);
+			fullAddStations = false; // whether it was full or not, a space has opened up :D
 			if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
 			{
 				logUpdate("Reservation station " + publishingStation.tag + " is publishing!");
@@ -909,6 +918,7 @@ public class Tomasulo
 			// ALU will figure out whether its single/double, and if its multiplication or division 
 			double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 					publishingStation.getVk());
+			fullMultiplyStations = false; // whether it was full or not, a space has opened up :D
 			publishFloatResult(tag, result);
 
 		}
@@ -918,6 +928,7 @@ public class Tomasulo
 			if (publishingBuffer == null)
 				throw new Exception("For some reason, one of the load buffers is not intialized");
 			publishingBuffer.setBusy(false);
+			fullLoadBuffers = false;
 			logUpdate("Load buffer " + publishingBuffer.getTag() + " is publishing!");
 			switch (publishingBuffer.getOpcode())
 			{
