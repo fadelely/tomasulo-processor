@@ -1,27 +1,43 @@
 package processor.tomasulo;
 
-public class ALU {
+public class ALU
+{
 	/*
-	 *  Notice that in every single ALU operation whenever it is single, we do a weird conversion 
-	 *  This is because if we leave it as is, the value gets fucked midconversion (or more precise to be exact)
-	 *  ex: instead of getting a result of 0.08, we get 0.0799999982...
-	 *  We do the weird hack for the converted result, but this might result in incorrect calulcations. Just means we
-	 *  need to test more :)
+	 * Notice that in every single ALU operation whenever it is single, we do a weird conversion
+	 * This is because if we leave it as is, the value gets fucked midconversion (or more precise to
+	 * be exact) ex: instead of getting a result of 0.08, we get 0.0799999982... We do the weird
+	 * hack for the converted result, but this might result in incorrect calulcations. Just means we
+	 * need to test more :)
 	 */
 	public static double addFloatOperation(String OPCode, double F2, double F3) throws Exception
 	{
-		switch(OPCode)
-				{
-				    case "ADD.D":
-						return addFloating(F2,F3,false);
-					case "SUB.D":
-						return subtractFloating(F2,F3,false);
-					case "ADD.S":
-						return addFloating(F2,F3,true);
-					case "SUB.S":
-						return subtractFloating(F2,F3,false);
-				}
-		throw new Exception("Add floating operation has been called in the ALU despite it not being a add floating operation");
+		switch (OPCode)
+		{
+		case "ADD.D":
+			return addFloating(F2, F3, false);
+		case "SUB.D":
+			return subtractFloating(F2, F3, false);
+		case "ADD.S":
+			return addFloating(F2, F3, true);
+		case "SUB.S":
+			return subtractFloating(F2, F3, false);
+		}
+		throw new Exception(
+				"Add floating operation has been called in the ALU despite it not being a add floating operation");
+	}
+
+	public static long addIntegerOperation(String OPCode, long R2, short immediate) throws Exception
+	{
+		switch (OPCode)
+		{
+		case "ADDI":
+			return ALU.addImmediate(R2, immediate);
+		case "SUBI":
+			return ALU.subtractImmediate(R2, immediate);
+		}
+		throw new Exception(
+				"Add integer operation has been called in the ALU despite it not being a add floating operation");
+
 	}
 //
 //				    case "MUL.D":
@@ -39,12 +55,6 @@ public class ALU {
 //					case "DIV.S":
 //						ALU.divideFloating(F1, freeReservationStation.getVj(), freeReservationStation.getVk(), true,
 //								freeReservationStation.getTag());
-//						break;
-//				    case "ADDI":
-//						ALU.addImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
-//						break;
-//					case "SUBI":
-//						ALU.subtractImmediate(R1, (long) freeReservationStation.getVj(), (short)freeReservationStation.getVk(), freeReservationStation.getTag());
 //						break;
 //				    case "SW":
 //						IntegerRegister integerRegisterValue = RegisterFile.readIntegerRegister(R1);
@@ -111,74 +121,88 @@ public class ALU {
 //
 //
 //			}
-		
-	private static double addFloating(double F2, double F3, boolean single) {
-		if (single) {
+
+	private static double addFloating(double F2, double F3, boolean single)
+	{
+		if (single)
+		{
 			System.out.println("Adding single values " + F2 + " + " + F3);
 			float result = (float) (F2 + F3);
-			double convertedResult =	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			double convertedResult = Double.valueOf(Float.valueOf(result).toString()).doubleValue();
 			return convertedResult;
-		} else {
+		}
+		else
+		{
 			System.out.println("Adding double values " + F2 + " + " + F3);
 			double result = F2 + F3;
 			return result;
 		}
 	}
 
-	private static double subtractFloating(double F2, double F3, boolean single) {
-		if (single) {
+	private static double subtractFloating(double F2, double F3, boolean single)
+	{
+		if (single)
+		{
 			System.out.println("Subtracting single values " + F2 + " + " + F3);
 			float result = (float) (F2 - F3);
-			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			double convertedResult = Double.valueOf(Float.valueOf(result).toString()).doubleValue();
 			return convertedResult;
-		} else {
+		}
+		else
+		{
 			System.out.println("Subtracting double values " + F2 + " + " + F3);
 			double result = F2 - F3;
 			return result;
 		}
 	}
 
-	private static void multiplyFloating(String F1, double F2, double F3, boolean single, int tag) {
-		if (single) {
+	private static void multiplyFloating(String F1, double F2, double F3, boolean single, int tag)
+	{
+		if (single)
+		{
 			System.out.println("Multiplying single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 * F3);
-			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
-			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
+			double convertedResult = Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			Tomasulo.multiplyReservationStations.set(1, new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, convertedResult, tag);
-		} else {
+		}
+		else
+		{
 			System.out.println("Multiplying double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 * F3;
-			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
+			Tomasulo.multiplyReservationStations.set(1, new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, result, tag);
 		}
 	}
 
-	private static void divideFloating(String F1, double F2, double F3, boolean single, int tag) {
-		if (single) {
+	private static void divideFloating(String F1, double F2, double F3, boolean single, int tag)
+	{
+		if (single)
+		{
 			System.out.println("Dividing single values " + F2 + " + " + F3 + " and saving onto " + F1);
 			float result = (float) (F2 / F3);
-			double convertedResult=	Double.valueOf(Float.valueOf(result).toString()).doubleValue();
-			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
+			double convertedResult = Double.valueOf(Float.valueOf(result).toString()).doubleValue();
+			Tomasulo.multiplyReservationStations.set(1, new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, convertedResult, tag);
-		} else {
+		}
+		else
+		{
 			System.out.println("Dividing double values " + F2 + " + " + F3 + " and saving onto " + F1);
 			double result = F2 / F3;
-			Tomasulo.multiplyReservationStations.set(1,new Tomasulo.ReservationStation(tag));
+			Tomasulo.multiplyReservationStations.set(1, new Tomasulo.ReservationStation(tag));
 			RegisterFile.writeRegister(F1, result, tag);
 		}
 	}
 
-	private static void addImmediate(String R1, long R2, short immediate, int tag)
+	private static long addImmediate(long R2, short immediate)
 	{
 		System.out.println("Adding immediate " + immediate + " onto the value " + R2);
-		long result = R2 + immediate;
-		RegisterFile.writeRegister(R1, result, tag);
+		return R2 + (long) immediate;
 	}
 
-	private static void subtractImmediate(String R1, long R2, short immediate, int tag)
+	private static long subtractImmediate(long R2, short immediate)
 	{
 		System.out.println("Subtracting immediate " + immediate + " onto the value " + R2);
-		long result = R2 - immediate;
-		RegisterFile.writeRegister(R1, result, tag);
+		return R2 - (long) immediate;
 	}
 }
