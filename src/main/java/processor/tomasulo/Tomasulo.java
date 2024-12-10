@@ -482,6 +482,7 @@ public class Tomasulo
 	private Consumer<String> updateLog;
 
 	public static int addReservationStationsSize = 4;
+
 	public static int multiplyReservationStationsSize = 4;
 	public static int loadBuffersSize = 4;
 	public static int storeBuffersSize = 4;
@@ -492,7 +493,16 @@ public class Tomasulo
 
 	public static int AddReservationStationExecutionTime = 2;
 
+	public static int AddImmReservationStationExecutionTime = 1;
+
+
+	public static int SubReservationStationExecutionTime = 2;
+
+	public static int SubImmReservationStationExecutionTime = 1;
+
 	public static int MultiplyReservationStationExecutionTime = 4;
+
+	public static int DivideReservationStationExecutionTime = 6;
 
 	public static RegisterFile registerFile = new RegisterFile();
 	public static Memory memory = new Memory();
@@ -537,7 +547,7 @@ public class Tomasulo
 	}
 
 	public void incrementClockCycle() {
-		clockCycle.set(clockCycle.get() + 1);  // Increment the clock cycle
+		setClockCycle(getClockCycle() + 1);  // Increment the clock cycle
 	}
 
 
@@ -559,7 +569,6 @@ public class Tomasulo
 		{
 			ReservationStation addReservationStation = new ReservationStation(tag++);
 			addReservationStations.add(addReservationStation);
-			//			System.out.println("Add: "+addReservationStation.tag+"   "+i);
 
 		}
 
@@ -567,20 +576,17 @@ public class Tomasulo
 		{
 			ReservationStation multiplyReservationStation = new ReservationStation(tag++);
 			multiplyReservationStations.add(multiplyReservationStation);
-			//			System.out.println("Multiply: "+multiplyReservationStation.tag+"   "+i);
 		}
 
 		for (int i = 0; i < loadBuffersSize; i++)
 		{
 			LoadBuffer loadBuffer = new LoadBuffer(tag++);
 			loadBuffers.add(loadBuffer);
-			//			System.out.println("Load: "+loadBuffer.tag+"   "+i);
 		}
 		for (int i = 0; i < storeBuffersSize; i++)
 		{
 			StoreBuffer storeBuffer = new StoreBuffer(tag++);
 			storeBuffers.add(storeBuffer);
-			//			System.out.println("Store :" +storeBuffer.tag+"   "+i);
 		}
 
 		instructions = parseText.parseTextFile();
@@ -647,6 +653,102 @@ public class Tomasulo
 			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
 
 		}
+		else if (parseText.isFloatSubtractionOperation((OPCode)))
+		{
+			// check for empty addition stations, if none are avaliable, stall
+			ReservationStation freeReservationStation = null;
+			for (ReservationStation addReservationStation : addReservationStations)
+				if (!addReservationStation.isBusy())
+				{
+					freeReservationStation = addReservationStation;
+					break;
+				}
+
+			if (freeReservationStation == null)
+			{
+				logUpdate("Stalled due to full reservation station...");
+				fullAddStations = true;
+				return;
+			}
+
+			freeReservationStation.setBusy(true);
+			freeReservationStation.setOpcode(OPCode);
+			freeReservationStation.setExecutionTime(SubReservationStationExecutionTime);
+			freeReservationStation.setIssueTime(getClockCycle());
+			String F1 = parsedInstruction[1]; // string as this is where we will save our result
+			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+			freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
+			if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
+			if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
+			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
+
+		}
+		else if (parseText.isIntegerAdditionOperation((OPCode)))
+		{
+			// check for empty addition stations, if none are avaliable, stall
+			ReservationStation freeReservationStation = null;
+			for (ReservationStation addReservationStation : addReservationStations)
+				if (!addReservationStation.isBusy())
+				{
+					freeReservationStation = addReservationStation;
+					break;
+				}
+
+			if (freeReservationStation == null)
+			{
+				logUpdate("Stalled due to full reservation station...");
+				fullAddStations = true;
+				return;
+			}
+
+			freeReservationStation.setBusy(true);
+			freeReservationStation.setOpcode(OPCode);
+			freeReservationStation.setExecutionTime(AddImmReservationStationExecutionTime);
+			freeReservationStation.setIssueTime(getClockCycle());
+			String F1 = parsedInstruction[1]; // string as this is where we will save our result
+			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+			freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
+			if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
+			if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
+			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
+
+		}
+		else if (parseText.isIntegerSubtractionOperation(OPCode))
+		{
+			// check for empty addition stations, if none are avaliable, stall
+			ReservationStation freeReservationStation = null;
+			for (ReservationStation addReservationStation : addReservationStations)
+				if (!addReservationStation.isBusy())
+				{
+					freeReservationStation = addReservationStation;
+					break;
+				}
+
+			if (freeReservationStation == null)
+			{
+				logUpdate("Stalled due to full reservation station...");
+				fullAddStations = true;
+				return;
+			}
+
+			freeReservationStation.setBusy(true);
+			freeReservationStation.setOpcode(OPCode);
+			freeReservationStation.setExecutionTime(SubImmReservationStationExecutionTime);
+			freeReservationStation.setIssueTime(getClockCycle());
+			String F1 = parsedInstruction[1]; // string as this is where we will save our result
+			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+			freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
+			if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
+			if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
+			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
+
+		}
 		else if (parseText.isMultiplyOperation(OPCode))
 		{
 			ReservationStation freeReservationStation = null;
@@ -679,38 +781,36 @@ public class Tomasulo
 			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
 
 		}
-		else if (parseText.isIntegerAdditionOperation(OPCode))
+		else if (parseText.isDivideOperation(OPCode))
 		{
 			ReservationStation freeReservationStation = null;
-			for (ReservationStation addReservationStation : addReservationStations)
-				if (!addReservationStation.isBusy())
+			for (ReservationStation multiplyReservationStation : multiplyReservationStations)
+				if (!multiplyReservationStation.isBusy())
 				{
-					freeReservationStation = addReservationStation;
+					freeReservationStation = multiplyReservationStation;
 					break;
 				}
 
 			if (freeReservationStation == null)
 			{
 				logUpdate("Stalled due to full reservation station...");
-				fullAddStations = true;
+				fullMultiplyStations = true;
 				stalled = true;
 				return;
 			}
 
 			freeReservationStation.setBusy(true);
 			freeReservationStation.setOpcode(OPCode);
-			freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
+			freeReservationStation.setExecutionTime(DivideReservationStationExecutionTime);
 			freeReservationStation.setIssueTime(getClockCycle());
-
-			String R1 = parsedInstruction[1]; // string as this is where we will save our result
-			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
-			short immediate = Short.valueOf(parsedInstruction[3]);
-
-			freeReservationStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
-			freeReservationStation.setQk(0); // since it only reads one register :)
-			if (R2.getQi() == 0) freeReservationStation.setVj(R2.getValue());
-			freeReservationStation.setVk(immediate);
-			RegisterFile.writeTagToRegisterFile(R1, freeReservationStation.getTag());
+			String F1 = parsedInstruction[1]; // string as this is where we will save our result
+			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+			freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
+			freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
+			if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
+			if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
+			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
 
 		}
 		else if (parseText.isLoadOperation(OPCode))
@@ -906,8 +1006,15 @@ public class Tomasulo
 						Memory.storeDouble(storeBuffer.getAddress(), storeBuffer.getV());
 						break;
 					}
+					logUpdate("Store buffer S" + storeBuffer.getTag()%storeBuffersSize + " is publishing!");
 					fullStoreBuffers = false;
 					storeBuffer.setBusy(false);
+					storeBuffer.setV(0);
+					storeBuffer.setQ(0);
+					storeBuffer.setAddress(0);
+
+
+
 				}
 
 			}
@@ -928,7 +1035,7 @@ public class Tomasulo
 			fullAddStations = false; // whether it was full or not, a space has opened up :D
 			if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.tag + " is publishing!");
+				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize + " is publishing!");
 				// ALU will figure out whether its single/double, and if its subtraction or addition
 				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 						publishingStation.getVk());
@@ -937,7 +1044,21 @@ public class Tomasulo
 
 			else if (parseText.isIntegerAdditionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag() + " is publishing!");
+				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize + " is publishing!");
+				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
+						(short) publishingStation.getQk());
+				publishIntegerResult(tag, result);
+			}
+			else if (parseText.isFloatSubtractionOperation(publishingStation.getOpcode()))
+			{
+				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize + " is publishing!");
+				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getQj(),
+						publishingStation.getQk());
+				publishFloatResult(tag, result);
+			}
+			else if (parseText.isIntegerSubtractionOperation(publishingStation.getOpcode()))
+			{
+				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize+ " is publishing!");
 				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						(short) publishingStation.getQk());
 				publishIntegerResult(tag, result);
@@ -957,7 +1078,7 @@ public class Tomasulo
 			ReservationStation publishingStation = getReservationStationWithTag(tag);
 			if (publishingStation == null) throw new Exception(
 					"For some reason, one of the multiplication reservation stations is not intialized");
-			logUpdate("Reservation station " + publishingStation.getTag() + " is publishing!");
+			logUpdate("Reservation station M" + publishingStation.getTag()%multiplyReservationStationsSize + " is publishing!");
 			// ALU will figure out whether its single/double, and if its multiplication or division 
 			double result = ALU.multiplyFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 					publishingStation.getVk());
@@ -977,7 +1098,7 @@ public class Tomasulo
 			if (publishingBuffer == null)
 				throw new Exception("For some reason, one of the load buffers is not intialized");
 			fullLoadBuffers = false;
-			logUpdate("Load buffer L" + publishingBuffer.getTag() + " is publishing!");
+			logUpdate("Load buffer L" + publishingBuffer.getTag()%loadBuffersSize + " is publishing!");
 			switch (publishingBuffer.getOpcode())
 			{
 			case "LW":
