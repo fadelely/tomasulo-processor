@@ -889,9 +889,8 @@ public class Tomasulo
 						Memory.storeDouble(storeBuffer.getAddress(), storeBuffer.getV());
 						break;
 					}
-//					fullStoreBuffers = false;
-//					storeBuffer.setBusy(false);
-//					storeBuffer.setAddress(0);
+					fullStoreBuffers = false;
+					storeBuffer.setBusy(false);
 				}
 
 			}
