@@ -4,8 +4,12 @@ import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -20,6 +24,10 @@ import javafx.stage.Stage;
 public class App extends Application{
 
     public static Tomasulo tomasulo=new Tomasulo();
+
+    public static int cellSize = 20;
+
+    public static int maxRows = 10;
 
 
     private void setupTable(TableView<Tomasulo.ReservationStation> table) {
@@ -45,25 +53,42 @@ public class App extends Application{
         TableColumn<Tomasulo.ReservationStation, Double> qkColumn = new TableColumn<>("Qk");
         qkColumn.setCellValueFactory(new PropertyValueFactory<>("qk"));
 
-        // Add columns to the table
-        table.getColumns().addAll(tagColumn, busyColumn, opcodeColumn, vjColumn, vkColumn, qjColumn, qkColumn);
+        TableColumn<Tomasulo.ReservationStation, Double> executionColumn = new TableColumn<>("Cycles");
+        executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
 
-        // Set table properties (optional)
+        // Add columns to the table
+        table.getColumns().addAll(tagColumn, busyColumn, opcodeColumn, vjColumn, vkColumn, qjColumn, qkColumn, executionColumn);
+
+        // Set fixed cell size
+        table.setFixedCellSize(cellSize); // Adjust as needed
+        double tableHeaderHeight = 28; // Approximate header height
+        table.setPrefHeight((maxRows * table.getFixedCellSize()) + tableHeaderHeight);
+
+        // Set table properties
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
+
 	private void setupTableLoad(TableView<Tomasulo.LoadBuffer> table) {
 
         TableColumn<Tomasulo.LoadBuffer, Number> tagColumn = new TableColumn<>("Tag");
-        tagColumn.setCellValueFactory(cellData -> cellData.getValue().tagProperty());
+        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
 
         TableColumn<Tomasulo.LoadBuffer, Boolean> busyColumn = new TableColumn<>("Busy");
-        busyColumn.setCellValueFactory(cellData -> cellData.getValue().busyProperty());
+        busyColumn.setCellValueFactory(new PropertyValueFactory<>("busy"));
 
         TableColumn<Tomasulo.LoadBuffer, Number> addressColumn = new TableColumn<>("Address");
-        addressColumn.setCellValueFactory(cellData -> cellData.getValue().addressProperty());
+        addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+
+        TableColumn<Tomasulo.LoadBuffer, Double> executionColumn = new TableColumn<>("Cycles");
+        executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
 
         // Add columns to the table
-        table.getColumns().addAll(tagColumn,busyColumn, addressColumn);
+        table.getColumns().addAll(tagColumn,busyColumn, addressColumn,executionColumn);
+
+        // Set fixed cell size
+        table.setFixedCellSize(cellSize); // Adjust as needed
+        double tableHeaderHeight = 28; // Approximate header height
+        table.setPrefHeight((maxRows * table.getFixedCellSize()) + tableHeaderHeight);
 
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -71,26 +96,64 @@ public class App extends Application{
     private void setupTableStore(TableView<Tomasulo.StoreBuffer> table) {
 
         TableColumn<Tomasulo.StoreBuffer, Number> tagColumn = new TableColumn<>("Tag");
-        tagColumn.setCellValueFactory(cellData -> cellData.getValue().tagProperty());
+        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
 
         TableColumn<Tomasulo.StoreBuffer, Boolean> busyColumn = new TableColumn<>("Busy");
-        busyColumn.setCellValueFactory(cellData->cellData.getValue().busyProperty());
+        busyColumn.setCellValueFactory(new PropertyValueFactory<>("busy"));
 
         TableColumn<Tomasulo.StoreBuffer, Number> addressColumn = new TableColumn<>("Address");
-        addressColumn.setCellValueFactory(cellData->cellData.getValue().addressProperty());
+        addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
 
         TableColumn<Tomasulo.StoreBuffer, Number> vColumn = new TableColumn<>("V");
-        vColumn.setCellValueFactory(cellData->cellData.getValue().VProperty());
+        vColumn.setCellValueFactory(new PropertyValueFactory<>("V"));
 
         TableColumn<Tomasulo.StoreBuffer, Number> qColumn = new TableColumn<>("Q");
-        qColumn.setCellValueFactory(cellData->cellData.getValue().QProperty());
+        qColumn.setCellValueFactory(new PropertyValueFactory<>("Q"));
+
+        TableColumn<Tomasulo.StoreBuffer, Double> executionColumn = new TableColumn<>("Cycles");
+        executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
 
         // Add columns to the table
-        table.getColumns().addAll(tagColumn,busyColumn, addressColumn, vColumn, qColumn);
+        table.getColumns().addAll(tagColumn,busyColumn, addressColumn, vColumn, qColumn,executionColumn);
+
+        // Set fixed cell size
+        table.setFixedCellSize(cellSize); // Adjust as needed
+        double tableHeaderHeight = 28; // Approximate header height
+        table.setPrefHeight((maxRows * table.getFixedCellSize()) + tableHeaderHeight);
 
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
+
+    private void setupIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
+
+        TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("registerName"));
+
+        TableColumn<RegisterFile.IntegerRegister, Number> qiColumn = new TableColumn<>("Qi");
+        qiColumn.setCellValueFactory(new PropertyValueFactory<>("qi"));
+
+        TableColumn<RegisterFile.IntegerRegister, Number> valueColumn = new TableColumn<>("Value");
+        valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
+
+        table.getColumns().addAll(nameColumn,qiColumn, valueColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+    private void setupFloatingRegistersTable(TableView<RegisterFile.FloatingRegister> table) {
+        TableColumn<RegisterFile.FloatingRegister, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("registerName"));
+
+        TableColumn<RegisterFile.FloatingRegister, Number> qiColumn = new TableColumn<>("Qi");
+        qiColumn.setCellValueFactory(new PropertyValueFactory<>("qi"));
+
+        TableColumn<RegisterFile.FloatingRegister, Number> valueColumn = new TableColumn<>("Value");
+        valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
+
+        table.getColumns().addAll(nameColumn,qiColumn, valueColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+
     private <T> void customizeTagColumn(TableView<T> table, String prefix) {
         TableColumn<T, String> tagColumn = (TableColumn<T, String>) table.getColumns()
                 .stream()
@@ -128,16 +191,19 @@ public class App extends Application{
 
     }
 
+    private void populateIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table, RegisterFile registerFile) {
+        ObservableList<RegisterFile.IntegerRegister> data = FXCollections.observableArrayList();
+        data.addAll(registerFile.integerRegisters);
+        table.setItems(data);
+    }
 
+    private void populateFloatingRegistersTable(TableView<RegisterFile.FloatingRegister> table, RegisterFile registerFile) {
+        ObservableList<RegisterFile.FloatingRegister> data = FXCollections.observableArrayList();
+        data.addAll(registerFile.floatingRegisters);
+        table.setItems(data);
+    }
 
-    @Override
-    public void start(Stage primaryStage) {
-        TextArea logArea = new TextArea();
-        logArea.setEditable(false);
-
-        // Create Tomasulo instance to access station sizes
-        Tomasulo tomasulo = new Tomasulo();
-
+    private VBox putAddStationBox(){
         // AddReservation table
         TableView<Tomasulo.ReservationStation> addStationTable = new TableView<>();
         setupTable(addStationTable);
@@ -145,7 +211,9 @@ public class App extends Application{
         VBox addStationBox = new VBox(10, addStationLabel, addStationTable);
         addStationBox.setPrefWidth(300);
         populateTableAdd(addStationTable, Tomasulo.addReservationStations);
-
+        return addStationBox;
+    }
+    private VBox putMultiplyStationBox(){
         // MultiplyReservation table
         TableView<Tomasulo.ReservationStation> multiplyStationTable = new TableView<>();
         setupTable(multiplyStationTable);
@@ -153,7 +221,10 @@ public class App extends Application{
         VBox multiplyStationBox = new VBox(10, multiplyStationLabel, multiplyStationTable);
         multiplyStationBox.setPrefWidth(300);
         populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations);
+        return multiplyStationBox;
+    }
 
+    private VBox putStoreStationBox(){
         // StoreReservation table
         TableView<Tomasulo.StoreBuffer> storeStationTable = new TableView<>();
         setupTableStore(storeStationTable);
@@ -161,7 +232,10 @@ public class App extends Application{
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
         populateTableStore(storeStationTable, Tomasulo.storeBuffers);
+        return storeStationBox;
+    }
 
+    private VBox putLoadStationBox(){
         // LoadReservation table
         TableView<Tomasulo.LoadBuffer> loadStationTable = new TableView<>();
         setupTableLoad(loadStationTable);
@@ -169,26 +243,204 @@ public class App extends Application{
         VBox loadStationBox = new VBox(10, loadStationLabel, loadStationTable);
         loadStationBox.setPrefWidth(150);
         populateTableLoad(loadStationTable, Tomasulo.loadBuffers);
+        return loadStationBox;
+    }
 
-        // Layout to align tables horizontally
+    private VBox putClockCycleBox(){
+        // Clock Cycle label
+        Label clockCycleLabel = new Label();
+        clockCycleLabel.textProperty().bind(tomasulo.clockCycleProperty().asString("Clock Cycle: %d"));
+        clockCycleLabel.setStyle("-fx-font-size: 16px;");
+        VBox clockCycleBox = new VBox(10, clockCycleLabel);
+        clockCycleBox.setPrefWidth(150);
+        return clockCycleBox;
+    }
+
+    private VBox putIntegerRegistersBox(){
+        // Integer Registers table
+        TableView<RegisterFile.IntegerRegister> integerTable = new TableView<>();
+        setupIntegerRegistersTable(integerTable);
+        populateIntegerRegistersTable(integerTable, tomasulo.registerFile);
+        Label integerLabel = new Label("Integer Registers");
+        VBox integerBox = new VBox(10, integerLabel, integerTable);
+        integerBox.setPrefWidth(300); // Adjust width if needed
+        return integerBox;
+    }
+
+    private VBox putFloatingRegistersBox(){
+        // Floating Registers table
+        TableView<RegisterFile.FloatingRegister> floatingTable = new TableView<>();
+        setupFloatingRegistersTable(floatingTable);
+        populateFloatingRegistersTable(floatingTable, tomasulo.registerFile);
+        Label floatingLabel = new Label("Floating Registers");
+        VBox floatingBox = new VBox(10, floatingLabel, floatingTable);
+        floatingBox.setPrefWidth(300); // Adjust width if needed
+        return floatingBox;
+    }
+
+
+
+    private HBox takeInputs() {
+        // Create the input fields for each variable, initially empty
+        TextField addReservationStationsField = new TextField("");
+        TextField multiplyReservationStationsField = new TextField("");
+        TextField loadBuffersField = new TextField("");
+        TextField storeBuffersField = new TextField("");
+        TextField loadBufferExecutionTimeField = new TextField("");
+        TextField storeBufferExecutionTimeField = new TextField("");
+        TextField addReservationStationExecutionTimeField = new TextField("");
+        TextField multiplyReservationStationExecutionTimeField = new TextField("");
+
+        // Create labels for each field
+        Label addReservationStationsLabel = new Label("Add Reservation Stations Size:");
+        Label multiplyReservationStationsLabel = new Label("Multiply Reservation Stations Size:");
+        Label loadBuffersLabel = new Label("Load Buffers Size:");
+        Label storeBuffersLabel = new Label("Store Buffers Size:");
+        Label loadBufferExecutionTimeLabel = new Label("Load Buffer Execution Time:");
+        Label storeBufferExecutionTimeLabel = new Label("Store Buffer Execution Time:");
+        Label addReservationStationExecutionTimeLabel = new Label("Add Reservation Station Execution Time:");
+        Label multiplyReservationStationExecutionTimeLabel = new Label("Multiply Reservation Station Execution Time:");
+
+        // Create a "Submit" button
+        Button submitButton = new Button("Submit");
+
+        // Set the button's action handler to collect inputs and update backend
+        submitButton.setOnAction(e -> {
+            try {
+                // Check if fields are empty, and if so, use the default value from the backend (tomasulo)
+                tomasulo.addReservationStationsSize = parseField(addReservationStationsField, tomasulo.addReservationStationsSize);
+                tomasulo.multiplyReservationStationsSize = parseField(multiplyReservationStationsField, tomasulo.multiplyReservationStationsSize);
+                tomasulo.loadBuffersSize = parseField(loadBuffersField, tomasulo.loadBuffersSize);
+                tomasulo.storeBuffersSize = parseField(storeBuffersField, tomasulo.storeBuffersSize);
+                tomasulo.LoadBufferExecutionTime = parseField(loadBufferExecutionTimeField, tomasulo.LoadBufferExecutionTime);
+                tomasulo.StoreBufferExecutionTime = parseField(storeBufferExecutionTimeField, tomasulo.StoreBufferExecutionTime);
+                tomasulo.AddReservationStationExecutionTime = parseField(addReservationStationExecutionTimeField, tomasulo.AddReservationStationExecutionTime);
+                tomasulo.MultiplyReservationStationExecutionTime = parseField(multiplyReservationStationExecutionTimeField, tomasulo.MultiplyReservationStationExecutionTime);
+
+                // Call init and update methods
+                tomasulo.init();
+
+                // Optionally, print confirmation (for debugging)
+                System.out.println("Backend variables updated successfully.");
+            } catch (Exception ex) {
+                // Handle invalid input
+                System.out.println("Invalid input, please enter valid integers.");
+            }
+        });
+
+        // Create a main label for the whole section
+        Label mainLabel = new Label("Enter Fields:");
+
+        // Layout for inputs (VBox)
+        VBox root = new VBox(10, mainLabel,
+                addReservationStationsLabel, addReservationStationsField,
+                multiplyReservationStationsLabel, multiplyReservationStationsField,
+                loadBuffersLabel, loadBuffersField,
+                storeBuffersLabel, storeBuffersField,
+                loadBufferExecutionTimeLabel, loadBufferExecutionTimeField,
+                storeBufferExecutionTimeLabel, storeBufferExecutionTimeField,
+                addReservationStationExecutionTimeLabel, addReservationStationExecutionTimeField,
+                multiplyReservationStationExecutionTimeLabel, multiplyReservationStationExecutionTimeField,
+                submitButton); // Add Submit button to the layout
+
+        // Set the max width for the VBox so it doesn't take up the whole screen width
+        root.setMaxWidth(600); // You can adjust this value based on your preference
+        root.setAlignment(Pos.CENTER); // Center the VBox inside its container
+
+        // HBox to center the VBox
+        HBox centerBox = new HBox();
+        centerBox.setAlignment(Pos.CENTER);
+        centerBox.getChildren().add(root);
+
+        return centerBox;
+    }
+
+    // Helper method to parse the field and return the value from the backend if the field is empty
+    private int parseField(TextField field, int defaultValue) {
+        String text = field.getText();
+        if (text.isEmpty()) {
+            return defaultValue;  // Use the backend's default value if the field is empty
+        }
+        try {
+            return Integer.parseInt(text);  // Parse the value from the field
+        } catch (NumberFormatException e) {
+            return defaultValue;  // If invalid input, return the backend's default value
+        }
+    }
+
+
+
+
+
+
+
+
+
+    @Override
+    public void start(Stage primaryStage) {
+        // Create Tomasulo instance to access station sizes
+        Tomasulo tomasulo = new Tomasulo();
+
+        // Create the welcome scene layout with input fields and a start button
+        VBox welcomeLayout = new VBox(20);
+        welcomeLayout.setAlignment(Pos.CENTER);
+
+        Label welcomeLabel = new Label("Welcome to Tomasulo Simulator");
+        welcomeLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+
+        // Use the takeInputs method to get all input fields and labels
+        HBox inputsBox = takeInputs();
+
+        // Start button to transition to the main scene
+        Button startButton = new Button("Start Simulation");
+        startButton.setStyle("-fx-font-size: 16px;");
+        startButton.setOnAction(e -> {
+            new Thread(() -> {
+                Platform.runLater(() -> {
+                    try {
+                        tomasulo.init(); // method to pass the cycle
+                    } catch (Exception ex) {
+                        System.out.println("Error during cycle execution: " + ex.getMessage());
+                    }
+                });
+            }).start();
+        });
+
+        // Add welcome label, inputs and start button to layout
+        welcomeLayout.getChildren().addAll(
+                welcomeLabel,
+                inputsBox,
+                startButton
+        );
+
+        // Create the welcome scene
+        Scene welcomeScene = new Scene(welcomeLayout, 600, 500);
+
+        // Main simulation scene setup (existing layout code)
+        VBox logAreaBox = new VBox(20);
+        TextArea logArea = new TextArea();
+        logArea.setEditable(false);
+        logAreaBox.getChildren().add(logArea);
+
+        VBox addStationBox = putAddStationBox();
+        VBox multiplyStationBox = putMultiplyStationBox();
+        VBox storeStationBox = putStoreStationBox();
+        VBox loadStationBox = putLoadStationBox();
+
+        VBox integerBox = putIntegerRegistersBox();
+        VBox floatingBox = putFloatingRegistersBox();
+        VBox clockCycleBox = putClockCycleBox();
+
+
+        // HBox to place Integer and Floating Registers next to each other
+        HBox registersBox = new HBox(20, integerBox, floatingBox, clockCycleBox);
+
+        // Layout to align tables horizontally (without Integer Registers)
         HBox tablesBox = new HBox(20, addStationBox, multiplyStationBox, storeStationBox, loadStationBox);
         HBox.setHgrow(addStationBox, Priority.ALWAYS);
         HBox.setHgrow(multiplyStationBox, Priority.ALWAYS);
         HBox.setHgrow(storeStationBox, Priority.ALWAYS);
         HBox.setHgrow(loadStationBox, Priority.ALWAYS);
-
-        // Start Button
-        Button startButton = new Button("Start");
-        startButton.setOnAction(e -> {
-            tomasulo.setUpdateLogCallback(logArea::appendText);
-            new Thread(() -> {
-                try {
-                    tomasulo.executeCycle();
-                } catch (IOException ex) {
-                    Platform.runLater(() -> logArea.appendText("Error: " + ex.getMessage() + "\n"));
-                }
-            }).start();
-        });
 
         // Next Cycle Button
         Button nextCycleButton = new Button("Next Cycle");
@@ -197,7 +449,7 @@ public class App extends Application{
             new Thread(() -> {
                 Platform.runLater(() -> {
                     try {
-//                        tomasulo.executeCycle(); // method to pass the cycle
+                        tomasulo.executeCycle(); // method to pass the cycle
                     } catch (Exception ex) {
                         logArea.appendText("Error during cycle execution: " + ex.getMessage() + "\n");
                     }
@@ -205,33 +457,35 @@ public class App extends Application{
             }).start();
         });
 
-        // Main layout
-        HBox buttonsBox = new HBox(10, startButton, nextCycleButton);
-        VBox layout = new VBox(20, logArea, tablesBox, buttonsBox);
+        // Main simulation layout
+        VBox layout = new VBox(20, logArea, tablesBox, registersBox, nextCycleButton);
         layout.setPadding(new Insets(15));
         VBox.setVgrow(tablesBox, Priority.ALWAYS);
         VBox.setVgrow(logArea, Priority.ALWAYS);
 
-        Scene scene = new Scene(layout);
-        primaryStage.setScene(scene);
+        Scene mainScene = new Scene(layout);
+
+        // Start button action to switch to the main scene
+        startButton.setOnAction(e -> {
+            primaryStage.setScene(mainScene);
+        });
+
+        // Set the initial scene to the welcome scene
+        primaryStage.setScene(welcomeScene);
         primaryStage.setTitle("Tomasulo Simulator");
         primaryStage.setFullScreen(true);
         primaryStage.show();
     }
 
 
+
+
+
     public static void main(String[] args) throws IOException {
 
-        tomasulo.init();
-        Memory.storeDouble(0, 5);
-        Memory.storeDouble(8, 7);
-        tomasulo.executeCycle();
-        tomasulo.executeCycle();
-        tomasulo.executeCycle();
-        tomasulo.executeCycle();
-        tomasulo.executeCycle();
-        tomasulo.executeCycle();
-//        launch();
+//        tomasulo.init();
+        launch();
+
     }
 
 }
