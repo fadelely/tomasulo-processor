@@ -3,6 +3,8 @@ package processor.tomasulo;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -18,6 +20,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import javax.security.auth.callback.LanguageCallback;
 
 
 @SuppressWarnings("unchecked")
@@ -246,16 +249,6 @@ public class App extends Application{
         return loadStationBox;
     }
 
-    private VBox putClockCycleBox(){
-        // Clock Cycle label
-        Label clockCycleLabel = new Label();
-        clockCycleLabel.textProperty().bind(tomasulo.clockCycleProperty().asString("Clock Cycle: %d"));
-        clockCycleLabel.setStyle("-fx-font-size: 16px;");
-        VBox clockCycleBox = new VBox(10, clockCycleLabel);
-        clockCycleBox.setPrefWidth(150);
-        return clockCycleBox;
-    }
-
     private VBox putIntegerRegistersBox(){
         // Integer Registers table
         TableView<RegisterFile.IntegerRegister> integerTable = new TableView<>();
@@ -279,7 +272,6 @@ public class App extends Application{
     }
 
 
-
     private HBox takeInputs() {
         // Create the input fields for each variable, initially empty
         TextField addReservationStationsField = new TextField("");
@@ -289,25 +281,52 @@ public class App extends Application{
         TextField loadBufferExecutionTimeField = new TextField("");
         TextField storeBufferExecutionTimeField = new TextField("");
         TextField addReservationStationExecutionTimeField = new TextField("");
+        TextField addImmReservationStationExecutionTimeField = new TextField("");
+        TextField subReservationStationExecutionTimeField = new TextField("");
+        TextField subImmReservationStationExecutionTimeField = new TextField("");
         TextField multiplyReservationStationExecutionTimeField = new TextField("");
+        TextField divideReservationStationExecutionTimeField = new TextField("");
 
-        // Create labels for each field
+        // Labels for sizes
         Label addReservationStationsLabel = new Label("Add Reservation Stations Size:");
         Label multiplyReservationStationsLabel = new Label("Multiply Reservation Stations Size:");
         Label loadBuffersLabel = new Label("Load Buffers Size:");
         Label storeBuffersLabel = new Label("Store Buffers Size:");
+
+        // Labels for execution times
         Label loadBufferExecutionTimeLabel = new Label("Load Buffer Execution Time:");
         Label storeBufferExecutionTimeLabel = new Label("Store Buffer Execution Time:");
         Label addReservationStationExecutionTimeLabel = new Label("Add Reservation Station Execution Time:");
+        Label addImmReservationStationExecutionTimeLabel = new Label("Add Reservation Station Immediate Time:");
+        Label subReservationStationExecutionTimeLabel = new Label("Sub Reservation Station Execution Time:");
+        Label subImmReservationStationExecutionTimeLabel = new Label("Sub Reservation Station Immediate Time:");
         Label multiplyReservationStationExecutionTimeLabel = new Label("Multiply Reservation Station Execution Time:");
+        Label divideReservationStationExecutionTimeLabel = new Label("Divide Reservation Station Execution Time:");
 
-        // Create a "Submit" button
+        // VBox for sizes
+        VBox sizesBox = new VBox(10,
+                addReservationStationsLabel, addReservationStationsField,
+                multiplyReservationStationsLabel, multiplyReservationStationsField,
+                loadBuffersLabel, loadBuffersField,
+                storeBuffersLabel, storeBuffersField
+        );
+
+        // VBox for execution times
+        VBox executionTimesBox = new VBox(10,
+                loadBufferExecutionTimeLabel, loadBufferExecutionTimeField,
+                storeBufferExecutionTimeLabel, storeBufferExecutionTimeField,
+                addReservationStationExecutionTimeLabel, addReservationStationExecutionTimeField,
+                addImmReservationStationExecutionTimeLabel, addImmReservationStationExecutionTimeField,
+                subReservationStationExecutionTimeLabel, subReservationStationExecutionTimeField,
+                subImmReservationStationExecutionTimeLabel, subImmReservationStationExecutionTimeField,
+                multiplyReservationStationExecutionTimeLabel, multiplyReservationStationExecutionTimeField,
+                divideReservationStationExecutionTimeLabel, divideReservationStationExecutionTimeField
+        );
+
+        // Submit button
         Button submitButton = new Button("Submit");
-
-        // Set the button's action handler to collect inputs and update backend
         submitButton.setOnAction(e -> {
             try {
-                // Check if fields are empty, and if so, use the default value from the backend (tomasulo)
                 tomasulo.addReservationStationsSize = parseField(addReservationStationsField, tomasulo.addReservationStationsSize);
                 tomasulo.multiplyReservationStationsSize = parseField(multiplyReservationStationsField, tomasulo.multiplyReservationStationsSize);
                 tomasulo.loadBuffersSize = parseField(loadBuffersField, tomasulo.loadBuffersSize);
@@ -315,45 +334,32 @@ public class App extends Application{
                 tomasulo.LoadBufferExecutionTime = parseField(loadBufferExecutionTimeField, tomasulo.LoadBufferExecutionTime);
                 tomasulo.StoreBufferExecutionTime = parseField(storeBufferExecutionTimeField, tomasulo.StoreBufferExecutionTime);
                 tomasulo.AddReservationStationExecutionTime = parseField(addReservationStationExecutionTimeField, tomasulo.AddReservationStationExecutionTime);
+                tomasulo.AddImmReservationStationExecutionTime = parseField(addImmReservationStationExecutionTimeField, tomasulo.AddImmReservationStationExecutionTime);
+                tomasulo.SubReservationStationExecutionTime = parseField(subReservationStationExecutionTimeField, tomasulo.SubReservationStationExecutionTime);
+                tomasulo.SubImmReservationStationExecutionTime = parseField(subImmReservationStationExecutionTimeField, tomasulo.SubImmReservationStationExecutionTime);
                 tomasulo.MultiplyReservationStationExecutionTime = parseField(multiplyReservationStationExecutionTimeField, tomasulo.MultiplyReservationStationExecutionTime);
+                tomasulo.DivideReservationStationExecutionTime = parseField(divideReservationStationExecutionTimeField, tomasulo.DivideReservationStationExecutionTime);
 
-                // Call init and update methods
                 tomasulo.init();
-
-                // Optionally, print confirmation (for debugging)
                 System.out.println("Backend variables updated successfully.");
             } catch (Exception ex) {
-                // Handle invalid input
                 System.out.println("Invalid input, please enter valid integers.");
             }
         });
 
-        // Create a main label for the whole section
-        Label mainLabel = new Label("Enter Fields:");
+        // Parent VBox to hold both sizes and execution times
+        HBox mainBox = new HBox(20,
+                sizesBox,
+                executionTimesBox,
+                submitButton
+        );
+        mainBox.setAlignment(Pos.CENTER);
+        mainBox.setPadding(new Insets(15));
+        mainBox.setMaxWidth(600);
 
-        // Layout for inputs (VBox)
-        VBox root = new VBox(10, mainLabel,
-                addReservationStationsLabel, addReservationStationsField,
-                multiplyReservationStationsLabel, multiplyReservationStationsField,
-                loadBuffersLabel, loadBuffersField,
-                storeBuffersLabel, storeBuffersField,
-                loadBufferExecutionTimeLabel, loadBufferExecutionTimeField,
-                storeBufferExecutionTimeLabel, storeBufferExecutionTimeField,
-                addReservationStationExecutionTimeLabel, addReservationStationExecutionTimeField,
-                multiplyReservationStationExecutionTimeLabel, multiplyReservationStationExecutionTimeField,
-                submitButton); // Add Submit button to the layout
-
-        // Set the max width for the VBox so it doesn't take up the whole screen width
-        root.setMaxWidth(600); // You can adjust this value based on your preference
-        root.setAlignment(Pos.CENTER); // Center the VBox inside its container
-
-        // HBox to center the VBox
-        HBox centerBox = new HBox();
-        centerBox.setAlignment(Pos.CENTER);
-        centerBox.getChildren().add(root);
-
-        return centerBox;
+        return mainBox;
     }
+
 
     // Helper method to parse the field and return the value from the backend if the field is empty
     private int parseField(TextField field, int defaultValue) {
@@ -367,13 +373,6 @@ public class App extends Application{
             return defaultValue;  // If invalid input, return the backend's default value
         }
     }
-
-
-
-
-
-
-
 
 
     @Override
@@ -414,7 +413,7 @@ public class App extends Application{
         );
 
         // Create the welcome scene
-        Scene welcomeScene = new Scene(welcomeLayout, 600, 500);
+        Scene welcomeScene = new Scene(welcomeLayout);
 
         // Main simulation scene setup (existing layout code)
         VBox logAreaBox = new VBox(20);
@@ -429,7 +428,12 @@ public class App extends Application{
 
         VBox integerBox = putIntegerRegistersBox();
         VBox floatingBox = putFloatingRegistersBox();
-        VBox clockCycleBox = putClockCycleBox();
+
+        Label clockCycleLabel = new Label();
+        clockCycleLabel.textProperty().bind(tomasulo.clockCycleProperty().asString("Clock Cycle: %d"));
+        clockCycleLabel.setStyle("-fx-font-size: 16px;");
+        VBox clockCycleBox = new VBox(10, clockCycleLabel);
+        clockCycleBox.setPrefWidth(150);
 
 
         // HBox to place Integer and Floating Registers next to each other
@@ -493,6 +497,8 @@ public class App extends Application{
 //        tomasulo.executeCycle();
 //        tomasulo.executeCycle();
 //        tomasulo.executeCycle();
+        Memory.storeSingle(0, 5);
+        Memory.storeSingle(4, 6);
         launch();
 
     }

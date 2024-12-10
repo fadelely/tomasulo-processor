@@ -120,6 +120,11 @@ public class RegisterFile {
 			integerRegisters[i] = new IntegerRegister(i); // Pass index for register name
 		}
 	}
+	public RegisterFile(FloatingRegister floatingRegisters[], IntegerRegister integerRegisters[]) {
+		this.floatingRegisters = floatingRegisters;
+		this.integerRegisters = integerRegisters;
+
+	}
 
 	public static IntegerRegister readIntegerRegister(String register) {
 		int registerNumber = register.charAt(1) - '0';
