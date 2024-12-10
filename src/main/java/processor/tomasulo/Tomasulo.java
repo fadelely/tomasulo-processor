@@ -25,6 +25,8 @@ public class Tomasulo
 		private final IntegerProperty address;
 
 		private final IntegerProperty executionTime;
+		
+		public boolean firstExecution;
 
 		// Constructor
 		public LoadBuffer(int tag)
@@ -35,6 +37,7 @@ public class Tomasulo
 			this.busy = new SimpleBooleanProperty(false);
 			this.address = new SimpleIntegerProperty(0);
 			this.executionTime = new SimpleIntegerProperty(0);
+			firstExecution = true;
 		}
 
 		// Getter and Setter for busy
@@ -493,6 +496,7 @@ public class Tomasulo
 
 	public static RegisterFile registerFile = new RegisterFile();
 	public static Memory memory = new Memory();
+	public static Cache cache = new Cache(128,8);
 	public static ALU alu = new ALU();
 
 	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
@@ -821,7 +825,20 @@ public class Tomasulo
 			if (loadBuffer.isBusy())
 			{
 				if (loadBuffer.getExecutionTime() > 0)
+				{
+					if(loadBuffer.firstExecution)
+					{
+						loadBuffer.firstExecution = false;
+						if(!cache.checkCache(loadBuffer.getAddress()))
+						{
+							loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() + 10);
+							cache.writeCache(loadBuffer.getAddress());
+							
+						}
+					}
 					loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() - 1);
+					
+				}
 				else if (loadBuffer.getExecutionTime() == 0 && lowestIssueTime > loadBuffer.getIssueTime())
 				{
 					lowestIssueTime = loadBuffer.getIssueTime();

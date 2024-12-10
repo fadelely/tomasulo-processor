@@ -3,6 +3,7 @@ package processor.tomasulo;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -246,7 +247,7 @@ public class App extends Application{
         return loadStationBox;
     }
 
-    private VBox putClockCycleBox(){
+    private static VBox putClockCycleBox(){
         // Clock Cycle label
         Label clockCycleLabel = new Label();
         clockCycleLabel.textProperty().bind(tomasulo.clockCycleProperty().asString("Clock Cycle: %d"));
