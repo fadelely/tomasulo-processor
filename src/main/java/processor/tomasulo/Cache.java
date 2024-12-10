@@ -14,6 +14,9 @@ public class Cache
 		this.blockSize = blockSize;
 	}
 	
+	// We do not have an acutual cache, we simulate it by storing only the index and tag bits
+	// and use it to check if its in the cache or not; if it is, continue normally, if not, write into
+	// the cache by changing the tags bit for that index and increase the execution time for that instruction
 	public boolean checkCache(int memoryAddress)
 	{
         int blockOffsetBits = (int)(Math.log(blockSize) / Math.log(2));
