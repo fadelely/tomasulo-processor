@@ -1,1 +1,1 @@
-ADD.D F2,2
+MUL.D F2,F2,F2

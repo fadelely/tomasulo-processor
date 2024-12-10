@@ -306,7 +306,7 @@ public class Tomasulo
 		// Constructor
 		public ReservationStation(int tag)
 		{
-			this.tag = 0;
+			this.tag = tag;
 			this.issueTime = new SimpleIntegerProperty(-1);
 			this.busy = new SimpleBooleanProperty(false);
 			this.opcode = new SimpleStringProperty("");
@@ -843,7 +843,6 @@ public class Tomasulo
 				{
 					lowestIssueTime = multiplicationStation.getIssueTime();
 					theStrongestOneAfterGojoOfCourse = multiplicationStation.getTag();
-//					multiplicationStation.setBusy(false);
 				}
 			}
 		}
@@ -944,7 +943,7 @@ public class Tomasulo
 					"For some reason, one of the multiplication reservation stations is not intialized");
 			logUpdate("Reservation station " + publishingStation.getTag() + " is publishing!");
 			// ALU will figure out whether its single/double, and if its multiplication or division 
-			double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
+			double result = ALU.multiplyFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 					publishingStation.getVk());
 			fullMultiplyStations = false; // whether it was full or not, a space has opened up :D
 			publishFloatResult(tag, result);
