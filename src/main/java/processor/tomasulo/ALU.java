@@ -58,23 +58,23 @@ public class ALU
 	}
 
 
-	////				case "BNEQ":
-	////					long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
-	////					if (R1 != R2) {
-	////						int instruction = Integer.parseInt(parsedInstruction[3]);
-	////						i = instruction - 1; // -1 since we will increment at the end of the loop
-	////
-	////					}
-	////					break;
-	////				case "BEQZ":
-	////					if (R1 == 0) {
-	////						int instruction = Integer.parseInt(parsedInstruction[2]);
-	////						i = instruction - 1; // -1 since we will increment at the end of the loop
-	////					}
-	////					break;
-	//
-	//
-	//			}
+//					case "BNEQ":
+//						long R2 = (long) RegisterFile.readRegister(parsedInstruction[2]);
+//						if (R1 != R2) {
+//							int instruction = Integer.parseInt(parsedInstruction[3]);
+//							i = instruction - 1; // -1 since we will increment at the end of the loop
+//	
+//						}
+//						break;
+//					case "BEQZ":
+//						if (R1 == 0) {
+//							int instruction = Integer.parseInt(parsedInstruction[2]);
+//							i = instruction - 1; // -1 since we will increment at the end of the loop
+//						}
+//						break;
+//	
+//	
+//				}
 
 	private static double addFloating(double F2, double F3, boolean single)
 	{

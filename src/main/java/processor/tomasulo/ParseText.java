@@ -122,6 +122,14 @@ public class ParseText
 		return possibleOperations.contains(opcode);
 
 	}
+	
+	boolean isBranchOperation(String opcode)
+	{
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("BEQ");
+		possibleOperations.add("BNE");
+		return possibleOperations.contains(opcode);
+	}
 
 	boolean isALUOperation(String opcode)
 	{

@@ -25,7 +25,7 @@ public class Tomasulo
 		private final IntegerProperty address;
 
 		private final IntegerProperty executionTime;
-		
+
 		public boolean firstExecution;
 
 		// Constructor
@@ -291,7 +291,6 @@ public class Tomasulo
 
 	public static class ReservationStation
 	{
-
 		private int tag;
 		private final IntegerProperty issueTime; // tracks when did it enter the reservation station; used to
 		// determine priority when two instructions are writing at the same
@@ -479,6 +478,161 @@ public class Tomasulo
 		}
 	}
 
+	public static class BranchStation
+	{
+
+		private final BooleanProperty busy;
+		private final StringProperty opcode; // Using StringProperty instead of a plain string.
+		private final DoubleProperty vj;
+		private final DoubleProperty vk;
+		private final IntegerProperty qj;
+		private final IntegerProperty qk;
+		private final IntegerProperty address;
+
+		private final IntegerProperty executionTime;
+
+		// Constructor
+		public BranchStation()
+		{
+			this.busy = new SimpleBooleanProperty(false);
+			this.opcode = new SimpleStringProperty("");
+			this.vj = new SimpleDoubleProperty(0.0);
+			this.vk = new SimpleDoubleProperty(0.0);
+			this.qj = new SimpleIntegerProperty(0);
+			this.qk = new SimpleIntegerProperty(0);
+			this.address = new SimpleIntegerProperty(0);
+			this.executionTime = new SimpleIntegerProperty(0);
+		}
+
+		// Getter and Setter for busy
+		public BooleanProperty busyProperty()
+		{
+			return busy;
+		}
+
+		public boolean isBusy()
+		{
+			return busy.get();
+		}
+
+		public void setBusy(boolean busy)
+		{
+			this.busy.set(busy);
+		}
+
+		// Getter and Setter for opcode
+		public StringProperty opcodeProperty()
+		{
+			return opcode;
+		}
+
+		public String getOpcode()
+		{
+			return opcode.get();
+		}
+
+		public void setOpcode(String opcode)
+		{
+			this.opcode.set(opcode);
+		}
+
+		// Getter and Setter for vj
+		public DoubleProperty vjProperty()
+		{
+			return vj;
+		}
+
+		public double getVj()
+		{
+			return vj.get();
+		}
+
+		public void setVj(double vj)
+		{
+			this.vj.set(vj);
+		}
+
+		// Getter and Setter for vk
+		public DoubleProperty vkProperty()
+		{
+			return vk;
+		}
+
+		public double getVk()
+		{
+			return vk.get();
+		}
+
+		public void setVk(double vk)
+		{
+			this.vk.set(vk);
+		}
+
+		// Getter and Setter for qj
+		public IntegerProperty qjProperty()
+		{
+			return qj;
+		}
+
+		public int getQj()
+		{
+			return qj.get();
+		}
+
+		public void setQj(int qj)
+		{
+			this.qj.set(qj);
+		}
+
+		// Getter and Setter for qk
+		public IntegerProperty qkProperty()
+		{
+			return qk;
+		}
+
+		public int getQk()
+		{
+			return qk.get();
+		}
+
+		public void setQk(int qk)
+		{
+			this.qk.set(qk);
+		}
+
+		// Getter and Setter for address
+		public IntegerProperty addressProperty()
+		{
+			return address;
+		}
+
+		public int getAddress()
+		{
+			return address.get();
+		}
+
+		public void setAddress(int address)
+		{
+			this.address.set(address);
+		}
+
+		public IntegerProperty executionTimeProperty()
+		{
+			return executionTime;
+		}
+
+		public int getExecutionTime()
+		{
+			return executionTime.get();
+		}
+
+		public void setExecutionTime(int executionTime)
+		{
+			this.executionTime.set(executionTime);
+		}
+
+	}
+
 	private Consumer<String> updateLog;
 
 	public static int addReservationStationsSize = 4;
@@ -495,7 +649,6 @@ public class Tomasulo
 
 	public static int AddImmReservationStationExecutionTime = 1;
 
-
 	public static int SubReservationStationExecutionTime = 2;
 
 	public static int SubImmReservationStationExecutionTime = 1;
@@ -504,9 +657,11 @@ public class Tomasulo
 
 	public static int DivideReservationStationExecutionTime = 6;
 
+	public static int BranchReservationStationExecutionTime = 3;
+
 	public static RegisterFile registerFile = new RegisterFile();
 	public static Memory memory = new Memory();
-	public static Cache cache = new Cache(128,8);
+	public static Cache cache = new Cache(128, 8);
 	public static ALU alu = new ALU();
 
 	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
@@ -521,35 +676,38 @@ public class Tomasulo
 	public static ObservableList<LoadBuffer> loadBuffers = FXCollections.observableArrayList();
 	public static ObservableList<StoreBuffer> storeBuffers = FXCollections.observableArrayList();
 
-	private int currentInstructionIndex = 0; // Index of the instruction being executed
-	private int remainingClockCycles = 0; // Clock cycles remaining for the current instruction
+	public static ObservableList<BranchStation> branchStation = FXCollections.observableArrayList();
+
 	private boolean fullAddStations = false;
 	private boolean fullMultiplyStations = false;
 	private boolean fullLoadBuffers = false;
 	private boolean fullStoreBuffers = false;
+	private boolean isBranching = false;
 	private boolean stalled = false; // Stalled state
 	private IntegerProperty clockCycle = new SimpleIntegerProperty(1); // Clock cycle as IntegerProperty
-	private String currentOPCode = ""; // OPCode of the instruction being executed
 
 	ParseText parseText = new ParseText();
 
 	// Getter for clock cycle
-	public IntegerProperty clockCycleProperty() {
+	public IntegerProperty clockCycleProperty()
+	{
 		return clockCycle;
 	}
 
-	public int getClockCycle() {
+	public int getClockCycle()
+	{
 		return clockCycle.get();
 	}
 
-	public void setClockCycle(int clockCycle) {
+	public void setClockCycle(int clockCycle)
+	{
 		this.clockCycle.set(clockCycle);
 	}
 
-	public void incrementClockCycle() {
-		setClockCycle(getClockCycle() + 1);  // Increment the clock cycle
+	public void incrementClockCycle()
+	{
+		setClockCycle(getClockCycle() + 1); // Increment the clock cycle
 	}
-
 
 	public void setUpdateLogCallback(Consumer<String> callback)
 	{
@@ -588,6 +746,8 @@ public class Tomasulo
 			StoreBuffer storeBuffer = new StoreBuffer(tag++);
 			storeBuffers.add(storeBuffer);
 		}
+		BranchStation newBranchStation = new BranchStation();
+		branchStation.add(newBranchStation);
 
 		instructions = parseText.parseTextFile();
 		instructionIterator = instructions.iterator();
@@ -609,7 +769,7 @@ public class Tomasulo
 		{
 			e.printStackTrace();
 		}
-		stalled = fullAddStations && fullLoadBuffers && fullMultiplyStations && fullStoreBuffers;
+		stalled = fullAddStations || fullLoadBuffers || fullMultiplyStations || fullStoreBuffers || isBranching;
 		incrementClockCycle();
 	}
 
@@ -891,6 +1051,22 @@ public class Tomasulo
 			freeStoreBuffer.setOpcode(OPCode);
 			freeStoreBuffer.setIssueTime(getClockCycle());
 		}
+		else if (parseText.isBranchOperation(OPCode))
+		{
+			isBranching = true;
+			BranchStation freeBranchStation = branchStation.get(0);
+			freeBranchStation.setBusy(true);
+			freeBranchStation.setOpcode(OPCode);
+			freeBranchStation.setExecutionTime(BranchReservationStationExecutionTime);
+			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
+			IntegerRegister R3 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
+			String loopAddress = parsedInstruction[3]; // string as this is where we will save our result
+			freeBranchStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
+			freeBranchStation.setQk(R3.getQi()); // if its 0, woo, if not, it saves it :)
+			freeBranchStation.setAddress(Integer.parseInt(loopAddress));
+			if (R2.getQi() == 0) freeBranchStation.setVj(R2.getValue());
+			if (R3.getQi() == 0) freeBranchStation.setVk(R3.getValue());
+		}
 
 	}
 
@@ -920,24 +1096,71 @@ public class Tomasulo
 		int lowestIssueTime = Integer.MAX_VALUE;
 		int theStrongestOneAfterGojoOfCourse = -1;// The tag of the one that will publish (based on
 													// priority above)
+		BranchStation branchingStation = branchStation.get(0);
+		if (branchingStation.isBusy())
+		{
+			if (branchingStation.getExecutionTime() > 0 && branchingStation.getQj() == 0
+					&& branchingStation.getQk() == 0)
+				branchingStation.setExecutionTime(branchingStation.getExecutionTime() - 1);
+			else if(branchingStation.getExecutionTime() == 0 )
+			{
+				isBranching = false;
+				branchingStation.setBusy(false);
+				if(branchingStation.getOpcode().equals("BNE"))
+				{
+					if(branchingStation.getQj() != branchingStation.getQk())
+					{
+						int instructionNumber = branchingStation.getAddress()/4;
+						instructionIterator = instructions.iterator();
+						for(int i = 0;i<instructionNumber;i++)
+							instructionIterator.next();
+						
+						logUpdate("Branch successful, branching to instruction address " + branchingStation.getAddress());
+					}
+					else
+					{
+						logUpdate("Not branching...");
+					}
+				}
+				if(branchingStation.getOpcode().equals("BEQ"))
+				{
+					if(branchingStation.getQj() == branchingStation.getQk())
+					{
+						int instructionNumber = branchingStation.getAddress()/4;
+						instructionIterator = instructions.iterator();
+						for(int i = 0;i<instructionNumber;i++)
+							instructionIterator.next();
+						
+						logUpdate("Branch successful, branching to instruction address " + branchingStation.getAddress());
+						
+					}
+					else
+					{
+						logUpdate("Not branching...");
+					}
+					
+				}
+
+			}
+		}
 		for (LoadBuffer loadBuffer : loadBuffers)
 		{
 			if (loadBuffer.isBusy())
 			{
 				if (loadBuffer.getExecutionTime() > 0)
 				{
-					if(loadBuffer.firstExecution)
+					if (loadBuffer.firstExecution)
 					{
 						loadBuffer.firstExecution = false;
-						if(!cache.checkCache(loadBuffer.getAddress()))
+						if (!cache.checkCache(loadBuffer.getAddress()))
 						{
 							loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() + 10);
 							cache.writeCache(loadBuffer.getAddress());
-							
+
 						}
 					}
 					loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() - 1);
-					
+
 				}
 				else if (loadBuffer.getExecutionTime() == 0 && lowestIssueTime > loadBuffer.getIssueTime())
 				{
@@ -1006,14 +1229,12 @@ public class Tomasulo
 						Memory.storeDouble(storeBuffer.getAddress(), storeBuffer.getV());
 						break;
 					}
-					logUpdate("Store buffer S" + storeBuffer.getTag()%storeBuffersSize + " is publishing!");
+					logUpdate("Store buffer S" + storeBuffer.getTag() % storeBuffersSize + " is publishing!");
 					fullStoreBuffers = false;
 					storeBuffer.setBusy(false);
 					storeBuffer.setV(0);
 					storeBuffer.setQ(0);
 					storeBuffer.setAddress(0);
-
-
 
 				}
 
@@ -1035,7 +1256,8 @@ public class Tomasulo
 			fullAddStations = false; // whether it was full or not, a space has opened up :D
 			if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize + " is publishing!");
+				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+						+ " is publishing!");
 				// ALU will figure out whether its single/double, and if its subtraction or addition
 				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 						publishingStation.getVk());
@@ -1044,21 +1266,24 @@ public class Tomasulo
 
 			else if (parseText.isIntegerAdditionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize + " is publishing!");
+				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+						+ " is publishing!");
 				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						(short) publishingStation.getQk());
 				publishIntegerResult(tag, result);
 			}
 			else if (parseText.isFloatSubtractionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize + " is publishing!");
+				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+						+ " is publishing!");
 				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						publishingStation.getQk());
 				publishFloatResult(tag, result);
 			}
 			else if (parseText.isIntegerSubtractionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag()%addReservationStationsSize+ " is publishing!");
+				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+						+ " is publishing!");
 				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						(short) publishingStation.getQk());
 				publishIntegerResult(tag, result);
@@ -1070,7 +1295,6 @@ public class Tomasulo
 			publishingStation.setQj(0);
 			publishingStation.setQk(0);
 
-
 		}
 		// if it is in the multiplication reservation stations, and so on...
 		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize)
@@ -1078,7 +1302,8 @@ public class Tomasulo
 			ReservationStation publishingStation = getReservationStationWithTag(tag);
 			if (publishingStation == null) throw new Exception(
 					"For some reason, one of the multiplication reservation stations is not intialized");
-			logUpdate("Reservation station M" + publishingStation.getTag()%multiplyReservationStationsSize + " is publishing!");
+			logUpdate("Reservation station M" + publishingStation.getTag() % multiplyReservationStationsSize
+					+ " is publishing!");
 			// ALU will figure out whether its single/double, and if its multiplication or division 
 			double result = ALU.multiplyFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
 					publishingStation.getVk());
@@ -1098,7 +1323,7 @@ public class Tomasulo
 			if (publishingBuffer == null)
 				throw new Exception("For some reason, one of the load buffers is not intialized");
 			fullLoadBuffers = false;
-			logUpdate("Load buffer L" + publishingBuffer.getTag()%loadBuffersSize + " is publishing!");
+			logUpdate("Load buffer L" + publishingBuffer.getTag() % loadBuffersSize + " is publishing!");
 			switch (publishingBuffer.getOpcode())
 			{
 			case "LW":
@@ -1176,7 +1401,7 @@ public class Tomasulo
 			{
 				storeBuffer.setQ(0);
 				storeBuffer.setV(result);
-//				storeBuffer.setBusy(false);
+				//				storeBuffer.setBusy(false);
 			}
 		}
 
@@ -1236,7 +1461,7 @@ public class Tomasulo
 			{
 				storeBuffer.setQ(0);
 				storeBuffer.setV(result);
-//				storeBuffer.setBusy(false);
+				//				storeBuffer.setBusy(false);
 			}
 		}
 
@@ -1269,6 +1494,7 @@ public class Tomasulo
 
 		return null;
 	}
+
 	private StoreBuffer getStoreBufferWithTag(int tag)
 	{
 		for (StoreBuffer storeBuffer : storeBuffers)
