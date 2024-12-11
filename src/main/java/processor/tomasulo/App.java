@@ -214,7 +214,6 @@ public class App extends Application{
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-
     private void setupEditableIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
         // Name column (non-editable)
         TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
@@ -256,7 +255,6 @@ public class App extends Application{
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setEditable(true);
     }
-
 
     private void setupEditableFloatingRegistersTable(TableView<RegisterFile.FloatingRegister> table) {
         // Name column (non-editable)
@@ -300,6 +298,54 @@ public class App extends Application{
         table.setEditable(true);
     }
 
+    private void setupInstructionsTable(TableView<Instructon> table) {
+        // Define the column for instructions
+        TableColumn<Instructon, String> instructionColumn = new TableColumn<>("Instruction");
+        instructionColumn.setCellValueFactory(new PropertyValueFactory<>("instruction")); // Bind directly to the String
+
+        // Define the column for current
+        TableColumn<Instructon, Boolean> currentColumn = new TableColumn<>("Current");
+        currentColumn.setCellValueFactory(new PropertyValueFactory<>("current")); // Bind directly to the boolean property
+
+        // Add the columns to the table
+        table.getColumns().addAll(instructionColumn);
+
+        // Optional: Set table properties
+        table.setFixedCellSize(25); // Adjust as needed
+        double tableHeaderHeight = 28;
+        table.setPrefHeight(10 * table.getFixedCellSize() + tableHeaderHeight);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        // Set row factory to highlight rows based on the current property
+        table.setRowFactory(tv -> {
+            TableRow<Instructon> row = new TableRow<>();
+
+            // Highlight the row when current is true
+            row.itemProperty().addListener((obs, oldItem, newItem) -> {
+                if (newItem != null) {
+                    // Add a listener to the current property of the Instructon object
+                    newItem.currentProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue) {
+                            row.setStyle("-fx-background-color: lightblue;"); // Apply your desired style
+                        } else {
+                            row.setStyle(""); // Remove the style when false
+                        }
+                    });
+
+                    // Initialize the style when the item is first added
+                    if (newItem.getCurrent()) {
+                        row.setStyle("-fx-background-color: lightblue;");
+                    } else {
+                        row.setStyle("");
+                    }
+                }
+            });
+
+            return row;
+        });
+    }
+
+
 
     private <T> void customizeTagColumn(TableView<T> table, String prefix) {
         TableColumn<T, String> tagColumn = (TableColumn<T, String>) table.getColumns()
@@ -315,7 +361,6 @@ public class App extends Application{
             });
         }
     }
-
 
     private void populateTableAdd(TableView<Tomasulo.ReservationStation> table,ObservableList<Tomasulo.ReservationStation> reservationStations) {
         table.setItems(reservationStations);
@@ -355,9 +400,19 @@ public class App extends Application{
         customizeTagColumn(table, "B");
     }
 
-    
+    private void populateInstructionsTable(TableView<Instructon> table) {
+        // Fetch the instructions from Tomasulo
+        try {
+            tomasulo.setupInstructions();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        ObservableList<Instructon> instructionsList = FXCollections.observableArrayList(Tomasulo.getInstructions());
 
-
+        // Set the items in the table
+        table.setItems(instructionsList);
+    }
 
     private VBox putAddStationBox(){
         // AddReservation table
@@ -384,7 +439,7 @@ public class App extends Application{
         // StoreReservation table
         TableView<Tomasulo.StoreBuffer> storeStationTable = new TableView<>();
         setupTableStore(storeStationTable);
-        Label storeStationLabel = new Label("StoreReservation");
+        Label storeStationLabel = new Label("StoreBuffer");
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
         populateTableStore(storeStationTable, tomasulo.storeBuffers);
@@ -395,7 +450,7 @@ public class App extends Application{
         // LoadReservation table
         TableView<Tomasulo.LoadBuffer> loadStationTable = new TableView<>();
         setupTableLoad(loadStationTable);
-        Label loadStationLabel = new Label("LoadReservation");
+        Label loadStationLabel = new Label("LoadBuffer");
         VBox loadStationBox = new VBox(10, loadStationLabel, loadStationTable);
         loadStationBox.setPrefWidth(150);
         populateTableLoad(loadStationTable, tomasulo.loadBuffers);
@@ -455,6 +510,25 @@ public class App extends Application{
         return floatingBox;
     }
 
+    private VBox putInstructionsBox() {
+        // Create the table
+        TableView<Instructon> instructionsTable = new TableView<>();
+
+        // Set up the table
+        setupInstructionsTable(instructionsTable);
+
+        // Populate the table with instructions from Tomasulo
+        populateInstructionsTable(instructionsTable);
+
+
+        //  Label instructionsLabel = new Label("Instructions");
+
+
+        VBox instructionsBox = new VBox(10,instructionsTable);
+        instructionsBox.setPrefWidth(400);
+
+        return instructionsBox;
+    }
 
     private HBox takeInputs() {
         // Create the input fields for each variable, initially empty
@@ -596,65 +670,8 @@ public class App extends Application{
         }
     }
 
-    private void setupInstructionsTable(TableView<String> table) {
-        // Define the column for instructions
-        TableColumn<String, String> instructionColumn = new TableColumn<>("Instruction");
-        instructionColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue())); // Bind directly to the String
-
-        // Add the column to the table
-        table.getColumns().add(instructionColumn);
-
-        // Optional: Set table properties
-        table.setFixedCellSize(25); // Adjust as needed
-        double tableHeaderHeight = 28;
-        table.setPrefHeight(10 * table.getFixedCellSize() + tableHeaderHeight);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    }
 
 
-    private void populateInstructionsTable(TableView<String> table) {
-        // Fetch the instructions from Tomasulo
-    	try {
-			tomasulo.setupInstructions();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        ObservableList<String> instructionsList = FXCollections.observableArrayList(Tomasulo.getInstructions());
-
-        // Debugging output to verify the list
-        System.out.println("Populating table with " + instructionsList.size() + " instructions.");
-        for (String instruction : instructionsList) {
-            System.out.println("Instruction: " + instruction);
-        }
-
-        // Set the items in the table
-        table.setItems(instructionsList);
-    }
-
-
-    private VBox putInstructionsBox() {
-        // Create the table
-        TableView<String> instructionsTable = new TableView<>();
-
-        // Set up the table
-        setupInstructionsTable(instructionsTable);
-
-        // Populate the table with instructions from Tomasulo
-        populateInstructionsTable(instructionsTable);
-
-      
-      //  Label instructionsLabel = new Label("Instructions");
-
-       
-        VBox instructionsBox = new VBox(10,instructionsTable);
-        instructionsBox.setPrefWidth(400);
-
-        return instructionsBox;
-    }
-
-
- 
     @Override
     public void start(Stage primaryStage) {
         // Create Tomasulo instance to access station sizes

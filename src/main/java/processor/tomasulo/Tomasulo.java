@@ -666,11 +666,11 @@ public class Tomasulo
 	public static Cache cache ;
 	public static ALU alu = new ALU();
 
-	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
+	public static ArrayList<Instructon> instructions = new ArrayList<>(); // these are all the
 																			// instructions, not yet
 																			// executed :)
 																			// size should be entered by user
-	public static Iterator<String> instructionIterator;
+	public static Iterator<Instructon> instructionIterator;
 	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
 
 	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
@@ -713,6 +713,12 @@ public class Tomasulo
 		this.clockCycle.set(clockCycle);
 	}
 
+	public static ArrayList<Instructon> getInstructions() {
+
+		return instructions;
+	}
+
+
 	public void incrementClockCycle()
 	{
 		setClockCycle(getClockCycle() + 1); // Increment the clock cycle
@@ -730,7 +736,7 @@ public class Tomasulo
 	}
 	public void setupInstructions() throws IOException
 	{
-		instructions = parseText.parseTextFile();
+		this.instructions = parseText.parseTextFile();
 	}
 	public String getTagString(int tag) {
 		// Check the tag's range and return the corresponding string
@@ -791,10 +797,9 @@ public class Tomasulo
 	public void executeCycle() throws IOException
 	{
 
-		String instruction = "";
+		Instructon instruction = new Instructon("", false);
 
 		System.out.println("In clock cycle: " + getClockCycle());
-		instruction = "";
 		if (!stalled && instructionIterator.hasNext()) instruction = instructionIterator.next();
 		try
 		{
@@ -808,12 +813,17 @@ public class Tomasulo
 		incrementClockCycle();
 	}
 
-	public void issue(String instruction) throws IOException
+	public void issue(Instructon instruction) throws IOException
 	{
 		if (stalled) return;
 
 		String regex = "[ ,]+";
-		String[] parsedInstruction = instruction.split(regex);
+		String[] parsedInstruction = instruction.getInstruction().split(regex);
+		for (Instructon instructionChange : instructions) {
+			instructionChange.setCurrent(false); // Assuming the current is a String property, set it to "false"
+		}
+
+		instruction.setCurrent(true);
 		String OPCode = parsedInstruction[0];
 
 		if (parseText.isFloatAdditionOperation(OPCode))
@@ -1456,7 +1466,7 @@ public class Tomasulo
 				register.setValue((long)result);
 			}
 		}
-//		System.out.println(registerFile.floatingRegisters[0]);
+
 
 	}
 
@@ -1546,24 +1556,7 @@ public class Tomasulo
 
 		return null;
 	}
-	// Static block to add test instructions
-  /*  static {
-        instructions.add("LOAD R1, 100");
-        instructions.add("ADD R1, R2, R3");
-        instructions.add("SUB R4, R5, R6");
-        instructions.add("MUL R1, R2, R3");
-        instructions.add("DIV R4, R1, R3");
-    }
-    */
 
-    public static ArrayList<String> getInstructions() {
-      
-    	System.out.println("Returning instructions:");
-        for (String instruction : instructions) {
-            System.out.println(instruction);
-        }
-        return instructions;
-    }
 
 
 

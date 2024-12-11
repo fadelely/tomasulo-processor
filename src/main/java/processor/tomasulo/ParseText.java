@@ -11,18 +11,25 @@ import java.util.Set;
 public class ParseText
 {
 
-	public ArrayList<String> parseTextFile() throws IOException
+	public ArrayList<Instructon> parseTextFile() throws IOException
 	{
 		File instructionList = new File("./resources/instructions.txt");
 		BufferedReader br = new BufferedReader(new FileReader(instructionList));
 		String str;
-		ArrayList<String> instructions = new ArrayList<String>(); // these are all the instructions, not yet executed :)
+		ArrayList<Instructon> instructions = new ArrayList<>(); // these are all the instructions, not yet executed :)
 		// puts all the instructions in an array, so we can branch easily later
+		Instructon instruction;
 		while ((str = br.readLine()) != null)
 		{
-			instructions.add(str);
+			instructions.add(new Instructon(str, false));
+//			System.out.println("Ins "+instruction.getInstruction()+ " current "+instruction.getCurrent());
+//			for(int i =0;i<instructions.size();i++)
+//			{
+//				System.out.println("Loop "+ instructions.get(i).getInstruction());
+//			}
 		}
 		br.close();
+
 		return instructions;
 	}
 
