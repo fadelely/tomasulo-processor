@@ -27,12 +27,11 @@ import javax.security.auth.callback.LanguageCallback;
 public class App extends Application{
 
     public static Tomasulo tomasulo=new Tomasulo();
-
+    
+    
     public static int cellSize = 20;
-
     public static int maxRows = 10;
-
-
+    
     private void setupTable(TableView<Tomasulo.ReservationStation> table) {
         // Define columns
         TableColumn<Tomasulo.ReservationStation, Integer> tagColumn = new TableColumn<>("Tag");
@@ -126,8 +125,7 @@ public class App extends Application{
 
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    }
-
+    }     
     private void setupIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
 
         TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
@@ -155,6 +153,41 @@ public class App extends Application{
         table.getColumns().addAll(nameColumn,qiColumn, valueColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
+    private void setupTableBranch(TableView<Tomasulo.BranchStation> table) {
+
+        TableColumn<Tomasulo.BranchStation, Boolean> busyColumn = new TableColumn<>("Busy");
+        busyColumn.setCellValueFactory(new PropertyValueFactory<>("busy"));
+
+        TableColumn<Tomasulo.BranchStation, String> opcodeColumn = new TableColumn<>("OpCode");
+        opcodeColumn.setCellValueFactory(new PropertyValueFactory<>("opcode"));
+
+        TableColumn<Tomasulo.BranchStation, Double> vjColumn = new TableColumn<>("Vj");
+        vjColumn.setCellValueFactory(new PropertyValueFactory<>("vj"));
+        
+        TableColumn<Tomasulo.BranchStation, Double> vkColumn = new TableColumn<>("Vk");
+        vkColumn.setCellValueFactory(new PropertyValueFactory<>("vk"));
+
+        TableColumn<Tomasulo.BranchStation, Double> qjColumn = new TableColumn<>("Qj");
+        qjColumn.setCellValueFactory(new PropertyValueFactory<>("qj"));
+
+        TableColumn<Tomasulo.BranchStation, Double> qkColumn = new TableColumn<>("Qk");
+        qkColumn.setCellValueFactory(new PropertyValueFactory<>("qk"));
+
+        TableColumn<Tomasulo.BranchStation, Double> addressColumn = new TableColumn<>("Address");
+        addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+
+        
+        TableColumn<Tomasulo.BranchStation, Double> executionColumn = new TableColumn<>("Cycles");
+        executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
+
+
+        table.getColumns().addAll(busyColumn, opcodeColumn, vjColumn, vkColumn, qjColumn, qkColumn, addressColumn, executionColumn);
+        table.setFixedCellSize(cellSize);
+        double tableHeaderHeight = 28; 
+        table.setPrefHeight(2*(table.getFixedCellSize()) + tableHeaderHeight);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
 
 
     private <T> void customizeTagColumn(TableView<T> table, String prefix) {
@@ -205,6 +238,12 @@ public class App extends Application{
         data.addAll(registerFile.floatingRegisters);
         table.setItems(data);
     }
+    private void populateTableBranch(TableView<Tomasulo.BranchStation> table, ObservableList<Tomasulo.BranchStation> branchStations) {
+        table.setItems(branchStations);
+        customizeTagColumn(table, "B");
+    }
+
+    
 
     private VBox putAddStationBox(){
         // AddReservation table
@@ -270,6 +309,16 @@ public class App extends Application{
         return floatingBox;
     }
 
+    private VBox putBranchStationBox() {
+        // BranchStation table
+        TableView<Tomasulo.BranchStation> branchStationTable = new TableView<>();
+        setupTableBranch(branchStationTable); // Setup table with branch-specific columns
+        Label branchStationLabel = new Label("BranchReservation");
+        VBox branchStationBox = new VBox(10, branchStationLabel, branchStationTable);
+        branchStationBox.setPrefWidth(300);
+        populateTableBranch(branchStationTable, Tomasulo.branchStation); // Populate the table with branch station data
+        return branchStationBox;
+    }
 
     private HBox takeInputs() {
         // Create the input fields for each variable, initially empty
@@ -373,12 +422,71 @@ public class App extends Application{
         }
     }
 
+    private void setupInstructionsTable(TableView<String> table) {
+        // Define the column for instructions
+        TableColumn<String, String> instructionColumn = new TableColumn<>("Instruction");
+        instructionColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue())); // Bind directly to the String
 
+        // Add the column to the table
+        table.getColumns().add(instructionColumn);
+
+        // Optional: Set table properties
+        table.setFixedCellSize(25); // Adjust as needed
+        double tableHeaderHeight = 28;
+        table.setPrefHeight(10 * table.getFixedCellSize() + tableHeaderHeight);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+
+    private void populateInstructionsTable(TableView<String> table) {
+        // Fetch the instructions from Tomasulo
+    	try {
+			tomasulo.setupInstructions();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        ObservableList<String> instructionsList = FXCollections.observableArrayList(Tomasulo.getInstructions());
+
+        // Debugging output to verify the list
+        System.out.println("Populating table with " + instructionsList.size() + " instructions.");
+        for (String instruction : instructionsList) {
+            System.out.println("Instruction: " + instruction);
+        }
+
+        // Set the items in the table
+        table.setItems(instructionsList);
+    }
+
+
+    private VBox putInstructionsBox() {
+        // Create the table
+        TableView<String> instructionsTable = new TableView<>();
+
+        // Set up the table
+        setupInstructionsTable(instructionsTable);
+
+        // Populate the table with instructions from Tomasulo
+        populateInstructionsTable(instructionsTable);
+
+      
+      //  Label instructionsLabel = new Label("Instructions");
+
+       
+        VBox instructionsBox = new VBox(10,instructionsTable);
+        instructionsBox.setPrefWidth(400);
+
+        return instructionsBox;
+    }
+
+
+ 
     @Override
     public void start(Stage primaryStage) {
         // Create Tomasulo instance to access station sizes
         Tomasulo tomasulo = new Tomasulo();
-
+       
+       
         // Create the welcome scene layout with input fields and a start button
         VBox welcomeLayout = new VBox(20);
         welcomeLayout.setAlignment(Pos.CENTER);
@@ -388,6 +496,7 @@ public class App extends Application{
 
         // Use the takeInputs method to get all input fields and labels
         HBox inputsBox = takeInputs();
+        VBox instructionsBox = putInstructionsBox();
 
         // Start button to transition to the main scene
         Button startButton = new Button("Start Simulation");
@@ -424,9 +533,13 @@ public class App extends Application{
         VBox multiplyStationBox = putMultiplyStationBox();
         VBox storeStationBox = putStoreStationBox();
         VBox loadStationBox = putLoadStationBox();
+       
+      
+
 
         VBox integerBox = putIntegerRegistersBox();
         VBox floatingBox = putFloatingRegistersBox();
+        VBox branchStationBox = putBranchStationBox();
 
         Label clockCycleLabel = new Label();
         clockCycleLabel.textProperty().bind(tomasulo.clockCycleProperty().asString("Clock Cycle: %d"));
@@ -436,7 +549,7 @@ public class App extends Application{
 
 
         // HBox to place Integer and Floating Registers next to each other
-        HBox registersBox = new HBox(20, integerBox, floatingBox, clockCycleBox);
+        HBox registersBox = new HBox(20, integerBox, floatingBox,branchStationBox,clockCycleBox);
 
         // Layout to align tables horizontally (without Integer Registers)
         HBox tablesBox = new HBox(20, addStationBox, multiplyStationBox, storeStationBox, loadStationBox);
@@ -444,6 +557,7 @@ public class App extends Application{
         HBox.setHgrow(multiplyStationBox, Priority.ALWAYS);
         HBox.setHgrow(storeStationBox, Priority.ALWAYS);
         HBox.setHgrow(loadStationBox, Priority.ALWAYS);
+        
 
         // Next Cycle Button
         Button nextCycleButton = new Button("Next Cycle");
@@ -459,9 +573,21 @@ public class App extends Application{
                 });
             }).start();
         });
+     // Create instructionsBox and set its height
+        instructionsBox.setPrefWidth(400);
+        instructionsBox.setPrefHeight(400); // Adjust this height as needed
 
+        // Create logAreaBox and set its height
+        logAreaBox.setPrefHeight(400); // Match the height of instructionsBox
+
+        // Add to instructionsLogBox
+        HBox instructionsLogBox = new HBox(20, instructionsBox, logAreaBox);
+        instructionsLogBox.setPrefWidth(900); // Adjust the total width as needed
+        instructionsLogBox.setPadding(new Insets(10));
+        HBox.setHgrow(instructionsBox, Priority.ALWAYS);
+        HBox.setHgrow(logAreaBox, Priority.ALWAYS);
         // Main simulation layout
-        VBox layout = new VBox(20, logArea, tablesBox, registersBox, nextCycleButton);
+        VBox layout = new VBox(20,instructionsLogBox, tablesBox, registersBox, nextCycleButton);
         layout.setPadding(new Insets(15));
         VBox.setVgrow(tablesBox, Priority.ALWAYS);
         VBox.setVgrow(logArea, Priority.ALWAYS);
@@ -486,7 +612,7 @@ public class App extends Application{
 
     public static void main(String[] args) throws IOException {
 
-//        tomasulo.init();
+       //tomasulo.init();
 //        tomasulo.executeCycle();
 //        tomasulo.executeCycle();
 //        tomasulo.executeCycle();

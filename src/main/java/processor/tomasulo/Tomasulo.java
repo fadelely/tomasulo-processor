@@ -719,6 +719,10 @@ public class Tomasulo
 		if (updateLog != null) updateLog.accept(message + "\n");
 
 	}
+	public void setupInstructions() throws IOException
+	{
+		instructions = parseText.parseTextFile();
+	}
 
 	public void init() throws IOException
 	{
@@ -749,7 +753,6 @@ public class Tomasulo
 		BranchStation newBranchStation = new BranchStation();
 		branchStation.add(newBranchStation);
 
-		instructions = parseText.parseTextFile();
 		instructionIterator = instructions.iterator();
 	}
 
@@ -829,7 +832,7 @@ public class Tomasulo
 				logUpdate("Stalled due to full reservation station...");
 				fullAddStations = true;
 				return;
-			}
+			} 
 
 			freeReservationStation.setBusy(true);
 			freeReservationStation.setOpcode(OPCode);
@@ -1502,5 +1505,25 @@ public class Tomasulo
 
 		return null;
 	}
+	// Static block to add test instructions
+  /*  static {
+        instructions.add("LOAD R1, 100");
+        instructions.add("ADD R1, R2, R3");
+        instructions.add("SUB R4, R5, R6");
+        instructions.add("MUL R1, R2, R3");
+        instructions.add("DIV R4, R1, R3");
+    }
+    */
+
+    public static ArrayList<String> getInstructions() {
+      
+    	System.out.println("Returning instructions:");
+        for (String instruction : instructions) {
+            System.out.println(instruction);
+        }
+        return instructions;
+    }
+
+
 
 }
