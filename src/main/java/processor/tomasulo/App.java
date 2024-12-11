@@ -346,7 +346,6 @@ public class App extends Application{
     }
 
 
-
     private <T> void customizeTagColumn(TableView<T> table, String prefix) {
         TableColumn<T, String> tagColumn = (TableColumn<T, String>) table.getColumns()
                 .stream()
@@ -814,7 +813,6 @@ public class App extends Application{
         Memory.storeSingle(0, 5);
         Memory.storeSingle(4, 6);
         launch();
-
     }
 
 }

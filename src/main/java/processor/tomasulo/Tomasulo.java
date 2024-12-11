@@ -670,7 +670,6 @@ public class Tomasulo
 																			// instructions, not yet
 																			// executed :)
 																			// size should be entered by user
-	public static Iterator<Instructon> instructionIterator;
 	public static ObservableList<ReservationStation> addReservationStations = FXCollections.observableArrayList();
 
 	public static ObservableList<ReservationStation> multiplyReservationStations = FXCollections.observableArrayList();
@@ -679,6 +678,8 @@ public class Tomasulo
 	public static ObservableList<StoreBuffer> storeBuffers = FXCollections.observableArrayList();
 
 	public static ObservableList<BranchStation> branchStation = FXCollections.observableArrayList();
+
+	public int currentInstructionIndex = 0;
 
 	private boolean fullAddStations = false;
 	private boolean fullMultiplyStations = false;
@@ -689,6 +690,7 @@ public class Tomasulo
 	private IntegerProperty clockCycle = new SimpleIntegerProperty(1); // Clock cycle as IntegerProperty
 
 	ParseText parseText = new ParseText();
+
 
 	public void setRegisterFile(RegisterFile registerFile) {
 		this.registerFile = registerFile;
@@ -789,29 +791,46 @@ public class Tomasulo
 		}
 		BranchStation newBranchStation = new BranchStation();
 		branchStation.add(newBranchStation);
-
 		cache = new Cache(cacheSize, blockSize);
-		instructionIterator = instructions.iterator();
 	}
 
-	public void executeCycle() throws IOException
-	{
+	private boolean alreadyDecremented = false; // Add a flag to track if the decrement has been applied
 
+	public void executeCycle() throws IOException {
 		Instructon instruction = new Instructon("", false);
 
 		System.out.println("In clock cycle: " + getClockCycle());
-		if (!stalled && instructionIterator.hasNext()) instruction = instructionIterator.next();
-		try
-		{
+
+		// Fetch the next instruction if not stalled and there are remaining instructions
+		if (!stalled && currentInstructionIndex < instructions.size()) {
+			instruction = instructions.get(currentInstructionIndex);
+			currentInstructionIndex++; // Move to the next instruction
+			alreadyDecremented = false; // Reset the flag when moving to the next instruction
+		}
+
+		try {
 			executeAndWrite();
-			if (!instruction.equals("")) issue(instruction);
-		} catch (Exception e)
-		{
+
+			// Issue the instruction if it's valid and not stalled
+			if (!instruction.getInstruction().equals("")) {
+				issue(instruction);
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		// Update the stalled flag based on system state
 		stalled = fullAddStations || fullLoadBuffers || fullMultiplyStations || fullStoreBuffers || isBranching;
+
+		// Decrement currentInstructionIndex only once if stalled
+		if (stalled && !alreadyDecremented) {
+			currentInstructionIndex--;
+			alreadyDecremented = true; // Mark that decrement has been applied
+		}
+
 		incrementClockCycle();
 	}
+
 
 	public void issue(Instructon instruction) throws IOException
 	{
@@ -1156,9 +1175,7 @@ public class Tomasulo
 					if(branchingStation.getQj() != branchingStation.getQk())
 					{
 						int instructionNumber = branchingStation.getAddress()/4;
-						instructionIterator = instructions.iterator();
-						for(int i = 0;i<instructionNumber;i++)
-							instructionIterator.next();
+						instructions.get(instructionNumber);
 						
 						logUpdate("Branch successful, branching to instruction address " + branchingStation.getAddress());
 					}
@@ -1172,9 +1189,7 @@ public class Tomasulo
 					if(branchingStation.getQj() == branchingStation.getQk())
 					{
 						int instructionNumber = branchingStation.getAddress()/4;
-						instructionIterator = instructions.iterator();
-						for(int i = 0;i<instructionNumber;i++)
-							instructionIterator.next();
+						instructions.get(instructionNumber);
 						
 						logUpdate("Branch successful, branching to instruction address " + branchingStation.getAddress());
 						
@@ -1274,7 +1289,7 @@ public class Tomasulo
 						Memory.storeDouble(storeBuffer.getAddress(), storeBuffer.getV());
 						break;
 					}
-					logUpdate("Store buffer S" + storeBuffer.getTag() % storeBuffersSize + " is publishing!");
+					logUpdate("Store buffer S" + getTagString(storeBuffer.getTag())+ " is publishing!");
 					fullStoreBuffers = false;
 					storeBuffer.setBusy(false);
 					storeBuffer.setV(0);
@@ -1301,7 +1316,7 @@ public class Tomasulo
 			fullAddStations = false; // whether it was full or not, a space has opened up :D
 			if (parseText.isFloatAdditionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+				logUpdate("Reservation station " + getTagString(publishingStation.getTag())
 						+ " is publishing!");
 				// ALU will figure out whether its single/double, and if its subtraction or addition
 				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
@@ -1311,7 +1326,7 @@ public class Tomasulo
 
 			else if (parseText.isIntegerAdditionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+				logUpdate("Reservation station " + getTagString(publishingStation.getTag())
 						+ " is publishing!");
 				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						(short) publishingStation.getQk());
@@ -1319,7 +1334,7 @@ public class Tomasulo
 			}
 			else if (parseText.isFloatSubtractionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+				logUpdate("Reservation station " + getTagString(publishingStation.getTag())
 						+ " is publishing!");
 				double result = ALU.addFloatOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						publishingStation.getQk());
@@ -1327,7 +1342,7 @@ public class Tomasulo
 			}
 			else if (parseText.isIntegerSubtractionOperation(publishingStation.getOpcode()))
 			{
-				logUpdate("Reservation station A" + publishingStation.getTag() % addReservationStationsSize
+				logUpdate("Reservation station " + getTagString(publishingStation.getTag())
 						+ " is publishing!");
 				long result = ALU.addIntegerOperation(publishingStation.getOpcode(), publishingStation.getQj(),
 						(short) publishingStation.getQk());
@@ -1347,7 +1362,7 @@ public class Tomasulo
 			ReservationStation publishingStation = getReservationStationWithTag(tag);
 			if (publishingStation == null) throw new Exception(
 					"For some reason, one of the multiplication reservation stations is not intialized");
-			logUpdate("Reservation station M" + publishingStation.getTag() % multiplyReservationStationsSize
+			logUpdate("Reservation station " + getTagString(publishingStation.getTag())
 					+ " is publishing!");
 			// ALU will figure out whether its single/double, and if its multiplication or division 
 			double result = ALU.multiplyFloatOperation(publishingStation.getOpcode(), publishingStation.getVj(),
@@ -1368,7 +1383,7 @@ public class Tomasulo
 			if (publishingBuffer == null)
 				throw new Exception("For some reason, one of the load buffers is not intialized");
 			fullLoadBuffers = false;
-			logUpdate("Load buffer L" + publishingBuffer.getTag() % loadBuffersSize + " is publishing!");
+			logUpdate("Load buffer " + getTagString(publishingBuffer.getTag())+ " is publishing!");
 			switch (publishingBuffer.getOpcode())
 			{
 			case "LW":
