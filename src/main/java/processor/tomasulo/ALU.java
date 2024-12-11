@@ -13,14 +13,14 @@ public class ALU
 	{
 		switch (OPCode)
 		{
-		case "ADD.D":
-			return addFloating(F2, F3, false);
-		case "SUB.D":
-			return subtractFloating(F2, F3, false);
-		case "ADD.S":
-			return addFloating(F2, F3, true);
-		case "SUB.S":
-			return subtractFloating(F2, F3, false);
+			case "ADD.D":
+				return addFloating(F2, F3, false);
+			case "SUB.D":
+				return subtractFloating(F2, F3, false);
+			case "ADD.S":
+				return addFloating(F2, F3, true);
+			case "SUB.S":
+				return subtractFloating(F2, F3, false);
 		}
 		throw new Exception(
 				"Add floating operation has been called in the ALU despite it not being a add floating operation");
@@ -30,10 +30,14 @@ public class ALU
 	{
 		switch (OPCode)
 		{
-		case "ADDI":
-			return ALU.addImmediate(R2, immediate);
-		case "SUBI":
-			return ALU.subtractImmediate(R2, immediate);
+			case "ADDI":
+				return ALU.addImmediate(R2, immediate);
+			case "DADDI":
+				return ALU.addImmediate(R2, immediate);
+			case "SUBI":
+				return ALU.subtractImmediate(R2, immediate);
+			case "DSUBI":
+				return ALU.subtractImmediate(R2, immediate);
 		}
 		throw new Exception(
 				"Add integer operation has been called in the ALU despite it not being a add integer operation");
@@ -44,14 +48,14 @@ public class ALU
 	{
 		switch (OPCode)
 		{
-		case "MUL.D":
-			return ALU.multiplyFloating(F2, F3, false);
-		case "DIV.D":
-			return ALU.divideFloating(F2, F3, false);
-		case "MUL.S":
-			return ALU.multiplyFloating(F2, F3, true);
-		case "DIV.S":
-			return ALU.divideFloating(F2, F3, true);
+			case "MUL.D":
+				return ALU.multiplyFloating(F2, F3, false);
+			case "DIV.D":
+				return ALU.divideFloating(F2, F3, false);
+			case "MUL.S":
+				return ALU.multiplyFloating(F2, F3, true);
+			case "DIV.S":
+				return ALU.divideFloating(F2, F3, true);
 		}
 		throw new Exception(
 				"Multiply floating operation has been called in the ALU despite it not being a multiply floating operation");
