@@ -3,7 +3,6 @@ package processor.tomasulo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Scanner;
 import java.util.function.Consumer;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -640,6 +639,9 @@ public class Tomasulo
 	public static int multiplyReservationStationsSize = 4;
 	public static int loadBuffersSize = 4;
 	public static int storeBuffersSize = 4;
+	public static int blockSize = 4;
+
+	public static int cacheSize = 16;
 
 	public static int LoadBufferExecutionTime = 2;
 
@@ -661,7 +663,7 @@ public class Tomasulo
 
 	public static RegisterFile registerFile = new RegisterFile();
 	public static Memory memory = new Memory();
-	public static Cache cache = new Cache(128, 8);
+	public static Cache cache ;
 	public static ALU alu = new ALU();
 
 	public static ArrayList<String> instructions = new ArrayList<String>(); // these are all the
@@ -687,6 +689,13 @@ public class Tomasulo
 	private IntegerProperty clockCycle = new SimpleIntegerProperty(1); // Clock cycle as IntegerProperty
 
 	ParseText parseText = new ParseText();
+
+	public void setRegisterFile(RegisterFile registerFile) {
+		this.registerFile = registerFile;
+	}
+	public RegisterFile getRegisterFile() {
+		return this.registerFile;
+	}
 
 	// Getter for clock cycle
 	public IntegerProperty clockCycleProperty()
@@ -719,6 +728,28 @@ public class Tomasulo
 		if (updateLog != null) updateLog.accept(message + "\n");
 
 	}
+	public String getTagString(int tag) {
+		// Check the tag's range and return the corresponding string
+		if (tag==0)
+			return "0";
+
+		if (tag <= addReservationStationsSize) {
+			// Tag falls within the "Add" Reservation Stations range
+			return "A" + tag;
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize) {
+			// Tag falls within the "Multiply" Reservation Stations range
+			return "M" + (tag - addReservationStationsSize); // Adjust the tag for the M range
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize) {
+			// Tag falls within the "Load" Buffers range
+			return "L" + (tag - addReservationStationsSize - multiplyReservationStationsSize); // Adjust the tag for the L range
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize + storeBuffersSize) {
+			// Tag falls within the "Store" Buffers range
+			return "S" + (tag - addReservationStationsSize - multiplyReservationStationsSize - loadBuffersSize); // Adjust the tag for the S range
+		} else {
+			// If the tag is out of bounds (greater than all ranges)
+			return "Invalid tag";
+		}
+	}
 
 	public void init() throws IOException
 	{
@@ -749,6 +780,8 @@ public class Tomasulo
 		BranchStation newBranchStation = new BranchStation();
 		branchStation.add(newBranchStation);
 
+
+		cache = new Cache(cacheSize, blockSize);
 		instructions = parseText.parseTextFile();
 		instructionIterator = instructions.iterator();
 	}
@@ -1413,6 +1446,15 @@ public class Tomasulo
 				register.setValue(result);
 			}
 		}
+		for (IntegerRegister register : RegisterFile.integerRegisters)
+		{
+			if (register.getQi() == tag)
+			{
+				register.setQi(0);
+				register.setValue((long)result);
+			}
+		}
+//		System.out.println(registerFile.floatingRegisters[0]);
 
 	}
 

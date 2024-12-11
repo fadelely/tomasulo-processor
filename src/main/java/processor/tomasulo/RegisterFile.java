@@ -121,8 +121,13 @@ public class RegisterFile {
 		}
 	}
 	public RegisterFile(FloatingRegister floatingRegisters[], IntegerRegister integerRegisters[]) {
-		this.floatingRegisters = floatingRegisters;
-		this.integerRegisters = integerRegisters;
+
+		for(int i = 0; i < floatingRegisters.length; i++) {
+			this.floatingRegisters[i] = floatingRegisters[i];
+		}
+		for(int i = 0; i < integerRegisters.length; i++) {
+			this.integerRegisters[i] = integerRegisters[i];
+		}
 
 	}
 

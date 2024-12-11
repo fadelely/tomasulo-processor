@@ -1,8 +1,12 @@
 package processor.tomasulo;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,9 +19,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import javax.security.auth.callback.LanguageCallback;
@@ -31,6 +37,9 @@ public class App extends Application{
     public static int cellSize = 20;
 
     public static int maxRows = 10;
+
+    private TableView<RegisterFile.IntegerRegister> integerRegisterTable=new TableView<>();
+    private TableView<RegisterFile.FloatingRegister> floatingRegisterTable = new TableView<>();
 
 
     private void setupTable(TableView<Tomasulo.ReservationStation> table) {
@@ -129,31 +138,132 @@ public class App extends Application{
     }
 
     private void setupIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
-
+        // Column for the register name
         TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("registerName"));
 
-        TableColumn<RegisterFile.IntegerRegister, Number> qiColumn = new TableColumn<>("Qi");
-        qiColumn.setCellValueFactory(new PropertyValueFactory<>("qi"));
+        // Column for the Qi value, converted to a string dynamically using binding
+        TableColumn<RegisterFile.IntegerRegister, String> qiColumn = new TableColumn<>("Qi");
+        qiColumn.setCellValueFactory(cellData -> {
+            RegisterFile.IntegerRegister register = cellData.getValue();
+            // Use binding to convert the Qi (int) to a corresponding string
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(register.getQi()), register.qiProperty());
+        });
 
+        // Column for the value of the register
         TableColumn<RegisterFile.IntegerRegister, Number> valueColumn = new TableColumn<>("Value");
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
-        table.getColumns().addAll(nameColumn,qiColumn, valueColumn);
+        // Add the columns to the table
+        table.getColumns().addAll(nameColumn, qiColumn, valueColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
+
     private void setupFloatingRegistersTable(TableView<RegisterFile.FloatingRegister> table) {
+        // Column for the register name
         TableColumn<RegisterFile.FloatingRegister, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("registerName"));
 
-        TableColumn<RegisterFile.FloatingRegister, Number> qiColumn = new TableColumn<>("Qi");
-        qiColumn.setCellValueFactory(new PropertyValueFactory<>("qi"));
+        // Column for the Qi value, dynamically updated using binding
+        TableColumn<RegisterFile.FloatingRegister, String> qiColumn = new TableColumn<>("Qi");
+        qiColumn.setCellValueFactory(cellData -> {
+            RegisterFile.FloatingRegister register = cellData.getValue();
+            // Using binding to convert the Qi value into a string
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(register.getQi()), register.qiProperty());
+        });
 
+        // Column for the value of the register
         TableColumn<RegisterFile.FloatingRegister, Number> valueColumn = new TableColumn<>("Value");
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
-        table.getColumns().addAll(nameColumn,qiColumn, valueColumn);
+        // Add the columns to the table
+        table.getColumns().addAll(nameColumn, qiColumn, valueColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    private void setupEditableIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
+        // Name column (non-editable)
+        TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("registerName"));
+        nameColumn.setEditable(false); // Make the Name column non-editable
+
+        // Qi column (editable)
+        TableColumn<RegisterFile.IntegerRegister, String> qiColumn = new TableColumn<>("Qi");
+        qiColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getQi())));
+        qiColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        qiColumn.setOnEditCommit(event -> {
+            RegisterFile.IntegerRegister register = event.getRowValue();
+            try {
+                register.setQi(Integer.parseInt(event.getNewValue()));
+            } catch (NumberFormatException e) {
+                // Handle invalid input (e.g., show an alert)
+                register.setQi(register.getQi()); // Reset to previous value
+            }
+        });
+
+        // Value column (editable)
+        TableColumn<RegisterFile.IntegerRegister, String> valueColumn = new TableColumn<>("Value");
+        valueColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getValue())));
+        valueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        valueColumn.setOnEditCommit(event -> {
+            RegisterFile.IntegerRegister register = event.getRowValue();
+            try {
+                register.setValue(Integer.parseInt(event.getNewValue()));
+            } catch (NumberFormatException e) {
+                // Handle invalid input (e.g., show an alert)
+                register.setValue(register.getValue()); // Reset to previous value
+            }
+        });
+
+        // Add columns to the table
+        table.getColumns().addAll(nameColumn, qiColumn, valueColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setEditable(true);
+    }
+
+
+    private void setupEditableFloatingRegistersTable(TableView<RegisterFile.FloatingRegister> table) {
+        // Name column (non-editable)
+        TableColumn<RegisterFile.FloatingRegister, String> nameColumn = new TableColumn<>("Name");
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("registerName"));
+        nameColumn.setEditable(false); // Make the Name column non-editable
+
+        // Qi column (editable)
+        TableColumn<RegisterFile.FloatingRegister, String> qiColumn = new TableColumn<>("Qi");
+        qiColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getQi())));
+        qiColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        qiColumn.setOnEditCommit(event -> {
+            RegisterFile.FloatingRegister register = event.getRowValue();
+            try {
+                register.setQi(Integer.parseInt(event.getNewValue())); // Set the Qi value
+            } catch (NumberFormatException e) {
+                // Handle invalid input (e.g., show an alert)
+                register.setQi(register.getQi()); // Reset to previous value if invalid input
+            }
+        });
+
+        // Value column (editable)
+        TableColumn<RegisterFile.FloatingRegister, String> valueColumn = new TableColumn<>("Value");
+        valueColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getValue())));
+        valueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        valueColumn.setOnEditCommit(event -> {
+            RegisterFile.FloatingRegister register = event.getRowValue();
+            try {
+                register.setValue(Integer.parseInt(event.getNewValue())); // Set the Value
+            } catch (NumberFormatException e) {
+                // Handle invalid input (e.g., show an alert)
+                register.setValue(register.getValue()); // Reset to previous value if invalid input
+            }
+        });
+
+        // Add columns to the table
+        table.getColumns().addAll(nameColumn, qiColumn, valueColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setEditable(true);
     }
 
 
@@ -171,6 +281,7 @@ public class App extends Application{
             });
         }
     }
+
 
     private void populateTableAdd(TableView<Tomasulo.ReservationStation> table,ObservableList<Tomasulo.ReservationStation> reservationStations) {
         table.setItems(reservationStations);
@@ -206,6 +317,8 @@ public class App extends Application{
         table.setItems(data);
     }
 
+
+
     private VBox putAddStationBox(){
         // AddReservation table
         TableView<Tomasulo.ReservationStation> addStationTable = new TableView<>();
@@ -213,7 +326,7 @@ public class App extends Application{
         Label addStationLabel = new Label("AddReservation");
         VBox addStationBox = new VBox(10, addStationLabel, addStationTable);
         addStationBox.setPrefWidth(300);
-        populateTableAdd(addStationTable, Tomasulo.addReservationStations);
+        populateTableAdd(addStationTable, tomasulo.addReservationStations);
         return addStationBox;
     }
     private VBox putMultiplyStationBox(){
@@ -223,7 +336,7 @@ public class App extends Application{
         Label multiplyStationLabel = new Label("MultiplyReservation");
         VBox multiplyStationBox = new VBox(10, multiplyStationLabel, multiplyStationTable);
         multiplyStationBox.setPrefWidth(300);
-        populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations);
+        populateTableMultiply(multiplyStationTable, tomasulo.multiplyReservationStations);
         return multiplyStationBox;
     }
 
@@ -234,7 +347,7 @@ public class App extends Application{
         Label storeStationLabel = new Label("StoreReservation");
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
-        populateTableStore(storeStationTable, Tomasulo.storeBuffers);
+        populateTableStore(storeStationTable, tomasulo.storeBuffers);
         return storeStationBox;
     }
 
@@ -245,7 +358,7 @@ public class App extends Application{
         Label loadStationLabel = new Label("LoadReservation");
         VBox loadStationBox = new VBox(10, loadStationLabel, loadStationTable);
         loadStationBox.setPrefWidth(150);
-        populateTableLoad(loadStationTable, Tomasulo.loadBuffers);
+        populateTableLoad(loadStationTable, tomasulo.loadBuffers);
         return loadStationBox;
     }
     private VBox putIntegerRegistersBox(){
@@ -270,6 +383,30 @@ public class App extends Application{
         return floatingBox;
     }
 
+    private HBox putEditableIntegerRegistersBox(){
+        // Integer Registers table
+        TableView<RegisterFile.IntegerRegister> integerTable = new TableView<>();
+        setupEditableIntegerRegistersTable(integerTable);
+        populateIntegerRegistersTable(integerTable, tomasulo.registerFile);
+        Label integerLabel = new Label("Integer");
+        HBox integerBox = new HBox(5, integerLabel, integerTable);
+        integerBox.setPrefWidth(300); // Adjust width if needed
+        return integerBox;
+    }
+
+    private HBox putEditableFloatingRegistersBox(){
+        // Floating Registers table
+        TableView<RegisterFile.FloatingRegister> floatingTable = new TableView<>();
+        setupEditableFloatingRegistersTable(floatingTable);
+        populateFloatingRegistersTable(floatingTable, tomasulo.registerFile);
+        Label floatingLabel = new Label("Floating ");
+        HBox floatingBox = new HBox(5, floatingLabel, floatingTable);
+        floatingBox.setPrefWidth(300); // Adjust width if needed
+        return floatingBox;
+    }
+
+
+
 
     private HBox takeInputs() {
         // Create the input fields for each variable, initially empty
@@ -277,6 +414,11 @@ public class App extends Application{
         TextField multiplyReservationStationsField = new TextField("");
         TextField loadBuffersField = new TextField("");
         TextField storeBuffersField = new TextField("");
+        TextField blockSizeField = new TextField("");
+        TextField cacheSizeField = new TextField("");
+
+
+
         TextField loadBufferExecutionTimeField = new TextField("");
         TextField storeBufferExecutionTimeField = new TextField("");
         TextField addReservationStationExecutionTimeField = new TextField("");
@@ -291,6 +433,8 @@ public class App extends Application{
         Label multiplyReservationStationsLabel = new Label("Multiply Reservation Stations Size:");
         Label loadBuffersLabel = new Label("Load Buffers Size:");
         Label storeBuffersLabel = new Label("Store Buffers Size:");
+        Label blockSizeLabel = new Label("Block Size:");
+        Label cacheSizeLabel = new Label("Cache Size:");
 
         // Labels for execution times
         Label loadBufferExecutionTimeLabel = new Label("Load Buffer Execution Time:");
@@ -307,7 +451,10 @@ public class App extends Application{
                 addReservationStationsLabel, addReservationStationsField,
                 multiplyReservationStationsLabel, multiplyReservationStationsField,
                 loadBuffersLabel, loadBuffersField,
-                storeBuffersLabel, storeBuffersField
+                storeBuffersLabel, storeBuffersField,
+                blockSizeLabel, blockSizeField,
+                cacheSizeLabel, cacheSizeField
+
         );
 
         // VBox for execution times
@@ -322,6 +469,8 @@ public class App extends Application{
                 divideReservationStationExecutionTimeLabel, divideReservationStationExecutionTimeField
         );
 
+        HBox editableIntegerBox = putEditableIntegerRegistersBox();
+        HBox editableFloatingBox = putEditableFloatingRegistersBox();
         // Submit button
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(e -> {
@@ -330,6 +479,8 @@ public class App extends Application{
                 tomasulo.multiplyReservationStationsSize = parseField(multiplyReservationStationsField, tomasulo.multiplyReservationStationsSize);
                 tomasulo.loadBuffersSize = parseField(loadBuffersField, tomasulo.loadBuffersSize);
                 tomasulo.storeBuffersSize = parseField(storeBuffersField, tomasulo.storeBuffersSize);
+                tomasulo.blockSize = parseField(blockSizeField, tomasulo.blockSize);
+                tomasulo.cacheSize = parseField(cacheSizeField, tomasulo.cacheSize);
                 tomasulo.LoadBufferExecutionTime = parseField(loadBufferExecutionTimeField, tomasulo.LoadBufferExecutionTime);
                 tomasulo.StoreBufferExecutionTime = parseField(storeBufferExecutionTimeField, tomasulo.StoreBufferExecutionTime);
                 tomasulo.AddReservationStationExecutionTime = parseField(addReservationStationExecutionTimeField, tomasulo.AddReservationStationExecutionTime);
@@ -338,11 +489,15 @@ public class App extends Application{
                 tomasulo.SubImmReservationStationExecutionTime = parseField(subImmReservationStationExecutionTimeField, tomasulo.SubImmReservationStationExecutionTime);
                 tomasulo.MultiplyReservationStationExecutionTime = parseField(multiplyReservationStationExecutionTimeField, tomasulo.MultiplyReservationStationExecutionTime);
                 tomasulo.DivideReservationStationExecutionTime = parseField(divideReservationStationExecutionTimeField, tomasulo.DivideReservationStationExecutionTime);
-
+                RegisterFile.IntegerRegister[] integerRegisters = getIntegerRegistersFromTable();
+                RegisterFile.FloatingRegister[] floatingRegisters = getFloatingRegistersFromTable();
+                RegisterFile registerFile = new RegisterFile(floatingRegisters, integerRegisters);
+                tomasulo.setRegisterFile(registerFile);
                 tomasulo.init();
+
                 System.out.println("Backend variables updated successfully.");
             } catch (Exception ex) {
-                System.out.println("Invalid input, please enter valid integers.");
+                System.out.println("Error updating backend variables: " + ex.getMessage());
             }
         });
 
@@ -350,13 +505,33 @@ public class App extends Application{
         HBox mainBox = new HBox(20,
                 sizesBox,
                 executionTimesBox,
+                editableIntegerBox,
+                editableFloatingBox,
                 submitButton
         );
         mainBox.setAlignment(Pos.CENTER);
         mainBox.setPadding(new Insets(15));
-        mainBox.setMaxWidth(600);
+
 
         return mainBox;
+    }
+    private RegisterFile.IntegerRegister[] getIntegerRegistersFromTable() {
+        List<RegisterFile.IntegerRegister> list = new ArrayList<>();
+        for (int i = 0; i < integerRegisterTable.getItems().size(); i++) {
+            RegisterFile.IntegerRegister register = integerRegisterTable.getItems().get(i);
+            list.add(register);
+        }
+        return list.toArray(new RegisterFile.IntegerRegister[0]);
+    }
+
+    // Method to gather FloatingRegisters from the table
+    private RegisterFile.FloatingRegister[] getFloatingRegistersFromTable() {
+        List<RegisterFile.FloatingRegister> list = new ArrayList<>();
+        for (int i = 0; i < floatingRegisterTable.getItems().size(); i++) {
+            RegisterFile.FloatingRegister register = floatingRegisterTable.getItems().get(i);
+            list.add(register);
+        }
+        return list.toArray(new RegisterFile.FloatingRegister[0]);
     }
 
 
@@ -377,7 +552,6 @@ public class App extends Application{
     @Override
     public void start(Stage primaryStage) {
         // Create Tomasulo instance to access station sizes
-        Tomasulo tomasulo = new Tomasulo();
 
         // Create the welcome scene layout with input fields and a start button
         VBox welcomeLayout = new VBox(20);
