@@ -681,6 +681,9 @@ public class Tomasulo
 
 	public int currentInstructionIndex = 0;
 
+	private boolean alreadyDecremented = false;
+
+
 	private boolean fullAddStations = false;
 	private boolean fullMultiplyStations = false;
 	private boolean fullLoadBuffers = false;
@@ -793,9 +796,6 @@ public class Tomasulo
 		branchStation.add(newBranchStation);
 		cache = new Cache(cacheSize, blockSize);
 	}
-
-	private boolean alreadyDecremented = false; // Add a flag to track if the decrement has been applied
-
 	public void executeCycle() throws IOException {
 		Instructon instruction = new Instructon("", false);
 
