@@ -6,13 +6,16 @@ public class Cache
 {
 
 	public static int[] blocks;
+	public static boolean[] isFilled;
 	public int blockSize;
 	public int cacheSize;
 
 	public Cache(int cacheSize, int blockSize)
 	{
 		blocks = new int[cacheSize/blockSize];
+		isFilled = new boolean[cacheSize/blockSize];
 		Arrays.fill(blocks, -1);
+		Arrays.fill(isFilled, false);
 		this.blockSize = blockSize;
 		this.cacheSize = cacheSize;
 	}
@@ -27,7 +30,7 @@ public class Cache
         int indexMask = (1 << indexBits) - 1;
 		int index = (memoryAddress >> (blockOffsetBits) ) & indexMask;
 		int tag = memoryAddress >> (blockOffsetBits + indexBits);
-		if(blocks[index] == tag)
+		if(blocks[index] == tag && isFilled[index] == true)
 		{
 			return true;
 		}
@@ -41,8 +44,17 @@ public class Cache
         int indexBits = (int)(Math.log(blocks.length) / Math.log(2));
         int indexMask = (1 << indexBits) - 1;
 		int index = (memoryAddress >> (blockOffsetBits) ) & indexMask;
-		int tag = (int) Math.floor(memoryAddress / blocks.length);
+		int tag  = memoryAddress >> (blockOffsetBits + indexBits);
 		blocks[index] = tag;
-
+		isFilled[index] = false;
+	}
+	
+	public void filledCache(int memoryAddress)
+	{
+        int blockOffsetBits = (int)(Math.log(blockSize) / Math.log(2));
+        int indexBits = (int)(Math.log(blocks.length) / Math.log(2));
+        int indexMask = (1 << indexBits) - 1;
+		int index = (memoryAddress >> (blockOffsetBits) ) & indexMask;
+		isFilled[index] = true;
 	}
 }

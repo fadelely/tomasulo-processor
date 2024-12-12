@@ -25,6 +25,7 @@ public class Tomasulo
 		private final IntegerProperty executionTime;
 
 		public boolean firstExecution;
+		public int fillingCache;
 
 		// Constructor
 		public LoadBuffer(int tag)
@@ -36,6 +37,7 @@ public class Tomasulo
 			this.address = new SimpleIntegerProperty(0);
 			this.executionTime = new SimpleIntegerProperty(0);
 			firstExecution = true;
+			fillingCache = 0;
 		}
 
 		// Getter and Setter for busy
@@ -835,6 +837,7 @@ public class Tomasulo
 	{
 		if (stalled) return;
 
+		logUpdate("Attemping to issue instruction: " + instruction.getInstruction());
 		String regex = "[ ,]+";
 		String[] parsedInstruction = instruction.getInstruction().split(regex);
 		for (Instructon instructionChange : instructions) {
@@ -1130,11 +1133,26 @@ public class Tomasulo
 						loadBuffer.firstExecution = false;
 						if (!cache.checkCache(loadBuffer.getAddress()))
 						{
+							logUpdate("Cache miss! Fetching cache...");
 							loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() + 10);
+							loadBuffer.fillingCache = 10;
 							cache.writeCache(loadBuffer.getAddress());
 						}
+						else
+						{
+							logUpdate("Cache hit!");
+							loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() - 1);
+						}
 					}
-					loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() - 1);
+					else
+					{
+						loadBuffer.setExecutionTime(loadBuffer.getExecutionTime() - 1);
+						loadBuffer.fillingCache--;
+						if(loadBuffer.fillingCache==0)
+							cache.filledCache(loadBuffer.getAddress());
+
+						
+					}
 
 				}
 				else if (loadBuffer.getExecutionTime() == 0 && lowestIssueTime > loadBuffer.getIssueTime())
@@ -1297,7 +1315,7 @@ public class Tomasulo
 			case "L.S":
 				float wordValue = Memory.loadSingle(publishingBuffer.getAddress());
 				// this weird hack is because precision gets fucked during conversion from float
-				// to double; techincally gets more precise, but still is not something we wanted
+				// to double; technically gets more precise, but still is not something we wanted
 				double convertedWordValue = Double.valueOf(Float.valueOf(wordValue).toString()).doubleValue();
 				publishFloatResult(tag, convertedWordValue);
 				break;
@@ -1306,6 +1324,7 @@ public class Tomasulo
 				publishFloatResult(tag, doubleWordValue);
 				break;
 			}
+			publishingBuffer.firstExecution = true;
 			publishingBuffer.setBusy(false);
 			publishingBuffer.setAddress(0);
 		}
