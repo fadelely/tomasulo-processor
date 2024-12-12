@@ -18,15 +18,9 @@ public class ParseText
 		String str;
 		ArrayList<Instructon> instructions = new ArrayList<>(); // these are all the instructions, not yet executed :)
 		// puts all the instructions in an array, so we can branch easily later
-		Instructon instruction;
 		while ((str = br.readLine()) != null)
 		{
 			instructions.add(new Instructon(str, false));
-//			System.out.println("Ins "+instruction.getInstruction()+ " current "+instruction.getCurrent());
-//			for(int i =0;i<instructions.size();i++)
-//			{
-//				System.out.println("Loop "+ instructions.get(i).getInstruction());
-//			}
 		}
 		br.close();
 
@@ -34,6 +28,16 @@ public class ParseText
 	}
 
 	// addition or subtraction really
+	boolean isFloatOperation(String opcode)
+	{
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("ADD.D");
+		possibleOperations.add("ADD.S");
+		possibleOperations.add("SUB.D");
+		possibleOperations.add("SUB.S");
+		return possibleOperations.contains(opcode);
+
+	}
 	boolean isFloatAdditionOperation(String opcode)
 	{
 		// why hashset one might ask
@@ -55,11 +59,18 @@ public class ParseText
 
 	}
 
+	boolean isIntegerOperation(String opcode)
+	{
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("DADDI");
+		possibleOperations.add("DSUBI");
+		return possibleOperations.contains(opcode);
+	}
+
 	boolean isIntegerAdditionOperation(String opcode)
 	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("DADDI");
-		possibleOperations.add("ADDI");
 		return possibleOperations.contains(opcode);
 
 	}
@@ -67,12 +78,21 @@ public class ParseText
 	{
 		Set<String> possibleOperations = new HashSet<String>();
 		possibleOperations.add("DSUBI");
-		possibleOperations.add("SUBI");
 		return possibleOperations.contains(opcode);
 
 	}
 
 	// division or multiplication
+	boolean isMultiplyOrDivideOperation(String opcode)
+	{
+		Set<String> possibleOperations = new HashSet<String>();
+		possibleOperations.add("MUL.D");
+		possibleOperations.add("MUL.S");
+		possibleOperations.add("DIV.D");
+		possibleOperations.add("DIV.S");
+		return possibleOperations.contains(opcode);
+	}
+
 	boolean isMultiplyOperation(String opcode)
 	{
 		Set<String> possibleOperations = new HashSet<String>();

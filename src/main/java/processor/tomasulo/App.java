@@ -7,11 +7,7 @@ import java.util.List;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -23,10 +19,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
-import javax.security.auth.callback.LanguageCallback;
 
 
 @SuppressWarnings("unchecked")
@@ -385,13 +378,13 @@ public class App extends Application{
 
     private void populateIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table, RegisterFile registerFile) {
         ObservableList<RegisterFile.IntegerRegister> data = FXCollections.observableArrayList();
-        data.addAll(registerFile.integerRegisters);
+        data.addAll(RegisterFile.integerRegisters);
         table.setItems(data);
     }
 
     private void populateFloatingRegistersTable(TableView<RegisterFile.FloatingRegister> table, RegisterFile registerFile) {
         ObservableList<RegisterFile.FloatingRegister> data = FXCollections.observableArrayList();
-        data.addAll(registerFile.floatingRegisters);
+        data.addAll(RegisterFile.floatingRegisters);
         table.setItems(data);
     }
     private void populateTableBranch(TableView<Tomasulo.BranchStation> table, ObservableList<Tomasulo.BranchStation> branchStations) {
@@ -404,7 +397,6 @@ public class App extends Application{
         try {
             tomasulo.setupInstructions();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         ObservableList<Instructon> instructionsList = FXCollections.observableArrayList(Tomasulo.getInstructions());
@@ -420,7 +412,7 @@ public class App extends Application{
         Label addStationLabel = new Label("AddReservation");
         VBox addStationBox = new VBox(10, addStationLabel, addStationTable);
         addStationBox.setPrefWidth(300);
-        populateTableAdd(addStationTable, tomasulo.addReservationStations);
+        populateTableAdd(addStationTable, Tomasulo.addReservationStations);
         return addStationBox;
     }
     private VBox putMultiplyStationBox(){
@@ -430,7 +422,7 @@ public class App extends Application{
         Label multiplyStationLabel = new Label("MultiplyReservation");
         VBox multiplyStationBox = new VBox(10, multiplyStationLabel, multiplyStationTable);
         multiplyStationBox.setPrefWidth(300);
-        populateTableMultiply(multiplyStationTable, tomasulo.multiplyReservationStations);
+        populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations);
         return multiplyStationBox;
     }
 
@@ -441,7 +433,7 @@ public class App extends Application{
         Label storeStationLabel = new Label("StoreBuffer");
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
-        populateTableStore(storeStationTable, tomasulo.storeBuffers);
+        populateTableStore(storeStationTable, Tomasulo.storeBuffers);
         return storeStationBox;
     }
 
@@ -452,14 +444,14 @@ public class App extends Application{
         Label loadStationLabel = new Label("LoadBuffer");
         VBox loadStationBox = new VBox(10, loadStationLabel, loadStationTable);
         loadStationBox.setPrefWidth(150);
-        populateTableLoad(loadStationTable, tomasulo.loadBuffers);
+        populateTableLoad(loadStationTable, Tomasulo.loadBuffers);
         return loadStationBox;
     }
     private VBox putIntegerRegistersBox(){
         // Integer Registers table
         TableView<RegisterFile.IntegerRegister> integerTable = new TableView<>();
         setupIntegerRegistersTable(integerTable);
-        populateIntegerRegistersTable(integerTable, tomasulo.registerFile);
+        populateIntegerRegistersTable(integerTable, Tomasulo.registerFile);
         Label integerLabel = new Label("Integer Registers");
         VBox integerBox = new VBox(10, integerLabel, integerTable);
         integerBox.setPrefWidth(300); // Adjust width if needed
@@ -470,7 +462,7 @@ public class App extends Application{
         // Floating Registers table
         TableView<RegisterFile.FloatingRegister> floatingTable = new TableView<>();
         setupFloatingRegistersTable(floatingTable);
-        populateFloatingRegistersTable(floatingTable, tomasulo.registerFile);
+        populateFloatingRegistersTable(floatingTable, Tomasulo.registerFile);
         Label floatingLabel = new Label("Floating Registers");
         VBox floatingBox = new VBox(10, floatingLabel, floatingTable);
         floatingBox.setPrefWidth(300); // Adjust width if needed
@@ -491,7 +483,7 @@ public class App extends Application{
         // Integer Registers table
         TableView<RegisterFile.IntegerRegister> integerTable = new TableView<>();
         setupEditableIntegerRegistersTable(integerTable);
-        populateIntegerRegistersTable(integerTable, tomasulo.registerFile);
+        populateIntegerRegistersTable(integerTable, Tomasulo.registerFile);
         Label integerLabel = new Label("Integer");
         HBox integerBox = new HBox(5, integerLabel, integerTable);
         integerBox.setPrefWidth(300); // Adjust width if needed
@@ -502,7 +494,7 @@ public class App extends Application{
         // Floating Registers table
         TableView<RegisterFile.FloatingRegister> floatingTable = new TableView<>();
         setupEditableFloatingRegistersTable(floatingTable);
-        populateFloatingRegistersTable(floatingTable, tomasulo.registerFile);
+        populateFloatingRegistersTable(floatingTable, Tomasulo.registerFile);
         Label floatingLabel = new Label("Floating ");
         HBox floatingBox = new HBox(5, floatingLabel, floatingTable);
         floatingBox.setPrefWidth(300); // Adjust width if needed
@@ -596,20 +588,20 @@ public class App extends Application{
         Button submitButton = new Button("Submit");
         submitButton.setOnAction(e -> {
             try {
-                tomasulo.addReservationStationsSize = parseField(addReservationStationsField, tomasulo.addReservationStationsSize);
-                tomasulo.multiplyReservationStationsSize = parseField(multiplyReservationStationsField, tomasulo.multiplyReservationStationsSize);
-                tomasulo.loadBuffersSize = parseField(loadBuffersField, tomasulo.loadBuffersSize);
-                tomasulo.storeBuffersSize = parseField(storeBuffersField, tomasulo.storeBuffersSize);
-                tomasulo.blockSize = parseField(blockSizeField, tomasulo.blockSize);
-                tomasulo.cacheSize = parseField(cacheSizeField, tomasulo.cacheSize);
-                tomasulo.LoadBufferExecutionTime = parseField(loadBufferExecutionTimeField, tomasulo.LoadBufferExecutionTime);
-                tomasulo.StoreBufferExecutionTime = parseField(storeBufferExecutionTimeField, tomasulo.StoreBufferExecutionTime);
-                tomasulo.AddReservationStationExecutionTime = parseField(addReservationStationExecutionTimeField, tomasulo.AddReservationStationExecutionTime);
-                tomasulo.AddImmReservationStationExecutionTime = parseField(addImmReservationStationExecutionTimeField, tomasulo.AddImmReservationStationExecutionTime);
-                tomasulo.SubReservationStationExecutionTime = parseField(subReservationStationExecutionTimeField, tomasulo.SubReservationStationExecutionTime);
-                tomasulo.SubImmReservationStationExecutionTime = parseField(subImmReservationStationExecutionTimeField, tomasulo.SubImmReservationStationExecutionTime);
-                tomasulo.MultiplyReservationStationExecutionTime = parseField(multiplyReservationStationExecutionTimeField, tomasulo.MultiplyReservationStationExecutionTime);
-                tomasulo.DivideReservationStationExecutionTime = parseField(divideReservationStationExecutionTimeField, tomasulo.DivideReservationStationExecutionTime);
+                Tomasulo.addReservationStationsSize = parseField(addReservationStationsField, Tomasulo.addReservationStationsSize);
+                Tomasulo.multiplyReservationStationsSize = parseField(multiplyReservationStationsField, Tomasulo.multiplyReservationStationsSize);
+                Tomasulo.loadBuffersSize = parseField(loadBuffersField, Tomasulo.loadBuffersSize);
+                Tomasulo.storeBuffersSize = parseField(storeBuffersField, Tomasulo.storeBuffersSize);
+                Tomasulo.blockSize = parseField(blockSizeField, Tomasulo.blockSize);
+                Tomasulo.cacheSize = parseField(cacheSizeField, Tomasulo.cacheSize);
+                Tomasulo.LoadBufferExecutionTime = parseField(loadBufferExecutionTimeField, Tomasulo.LoadBufferExecutionTime);
+                Tomasulo.StoreBufferExecutionTime = parseField(storeBufferExecutionTimeField, Tomasulo.StoreBufferExecutionTime);
+                Tomasulo.AddReservationStationExecutionTime = parseField(addReservationStationExecutionTimeField, Tomasulo.AddReservationStationExecutionTime);
+                Tomasulo.AddImmReservationStationExecutionTime = parseField(addImmReservationStationExecutionTimeField, Tomasulo.AddImmReservationStationExecutionTime);
+                Tomasulo.SubReservationStationExecutionTime = parseField(subReservationStationExecutionTimeField, Tomasulo.SubReservationStationExecutionTime);
+                Tomasulo.SubImmReservationStationExecutionTime = parseField(subImmReservationStationExecutionTimeField, Tomasulo.SubImmReservationStationExecutionTime);
+                Tomasulo.MultiplyReservationStationExecutionTime = parseField(multiplyReservationStationExecutionTimeField, Tomasulo.MultiplyReservationStationExecutionTime);
+                Tomasulo.DivideReservationStationExecutionTime = parseField(divideReservationStationExecutionTimeField, Tomasulo.DivideReservationStationExecutionTime);
                 RegisterFile.IntegerRegister[] integerRegisters = getIntegerRegistersFromTable();
                 RegisterFile.FloatingRegister[] floatingRegisters = getFloatingRegistersFromTable();
                 RegisterFile registerFile = new RegisterFile(floatingRegisters, integerRegisters);
@@ -800,18 +792,11 @@ public class App extends Application{
 
     public static void main(String[] args) throws IOException {
 
-       //tomasulo.init();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-//        tomasulo.executeCycle();
-        Memory.storeSingle(0, 5);
-        Memory.storeSingle(4, 6);
+    	Memory.storeWord(0, 2147483647);
+    	Memory.storeWord(4, -2147483648 );
+    	Memory.storeDoubleWord(8, 1152921504606846975L);
+    	Memory.storeSingle(16, 3.4028235e+38f);
+    	Memory.storeDouble(24, 1.7976931348623157e+308 * 0.5);
         launch();
     }
 

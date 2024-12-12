@@ -1,7 +1,5 @@
 package processor.tomasulo;
 
-import javafx.beans.property.IntegerProperty;
-
 import java.util.Arrays;
 
 public class Cache
