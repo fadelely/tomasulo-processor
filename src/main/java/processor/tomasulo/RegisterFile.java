@@ -132,14 +132,16 @@ public class RegisterFile {
 	}
 
 	public static IntegerRegister readIntegerRegister(String register) {
-		int registerNumber = register.charAt(1) - '0';
+		String registerNumberStr = register.replaceAll("[^0-9]", "");
+		int registerNumber = Integer.parseInt(registerNumberStr);
 		IntegerRegister intReg = RegisterFile.integerRegisters[registerNumber];
 		System.out.println("Reading register " + register + ", value is: " + intReg.getValue() + ", and q is " + intReg.getQi());
 		return intReg;
 	}
 
 	public static FloatingRegister readFloatRegister(String register) {
-		int registerNumber = register.charAt(1) - '0';
+		String registerNumberStr = register.replaceAll("[^0-9]", "");
+		int registerNumber = Integer.parseInt(registerNumberStr);
 		FloatingRegister floatReg = RegisterFile.floatingRegisters[registerNumber];
 		System.out.println("Reading register " + register + ", value is: " + floatReg.getValue() + ", and q is " + floatReg.getQi());
 		return floatReg;

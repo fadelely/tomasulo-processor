@@ -791,12 +791,7 @@ public class App extends Application{
 
 
     public static void main(String[] args) throws IOException {
-
-    	Memory.storeWord(0, 2147483647);
-    	Memory.storeWord(4, -2147483648 );
-    	Memory.storeDoubleWord(8, 1152921504606846975L);
-    	Memory.storeSingle(16, 3.4028235e+38f);
-    	Memory.storeDouble(24, 1.7976931348623157e+308 * 0.5);
+    	Memory.storeDoubleWord(0, 1152921504606846950L);
         launch();
     }
 
