@@ -1352,7 +1352,7 @@ public class Tomasulo
 		freeBranchStation.setExecutionTime(BranchReservationStationExecutionTime);
 		IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
 		IntegerRegister R3 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
-		String loopAddress = parsedInstruction[3]; // string as this is where we will save our result
+		String loopAddress = parsedInstruction[3]; 
 		freeBranchStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
 		freeBranchStation.setQk(R3.getQi()); // if its 0, woo, if not, it saves it :)
 		freeBranchStation.setAddress(Integer.parseInt(loopAddress));
@@ -1397,7 +1397,7 @@ public class Tomasulo
 				branchingStation.setBusy(false);
 				if (branchingStation.getOpcode().equals("BNE"))
 				{
-					if (branchingStation.getQj() != branchingStation.getQk())
+					if (branchingStation.getVj() != branchingStation.getVk())
 					{
 						int instructionNumber = branchingStation.getAddress() / 4;
 						instructions.get(instructionNumber);
@@ -1412,7 +1412,7 @@ public class Tomasulo
 				}
 				if (branchingStation.getOpcode().equals("BEQ"))
 				{
-					if (branchingStation.getQj() == branchingStation.getQk())
+					if (branchingStation.getVj() == branchingStation.getVk())
 					{
 						int instructionNumber = branchingStation.getAddress() / 4;
 						instructions.get(instructionNumber);
@@ -1432,7 +1432,7 @@ public class Tomasulo
 		}
 		for (LoadBuffer loadBuffer : loadBuffers)
 		{
-			if (loadBuffer.isBusy())
+			if (loadBuffer.isBusy() && loadBuffer.getQAddress() == 0)
 			{
 				if (loadBuffer.getExecutionTime() > 0)
 				{
@@ -1557,7 +1557,6 @@ public class Tomasulo
 					storeBuffer.setV(0);
 					storeBuffer.setQ(0);
 					storeBuffer.setAddress(0);
-
 				}
 
 			}
@@ -1768,6 +1767,19 @@ public class Tomasulo
 	public void publishIntegerResult(int tag, long result)
 	{
 
+		if(branchStation.get(0).isBusy())
+		{
+			if(branchStation.get(0).getQj() == tag)
+			{
+				branchStation.get(0).setVj(result);
+				branchStation.get(0).setQj(0);
+			}
+			if(branchStation.get(0).getQk() == tag)
+			{
+				branchStation.get(0).setVk(result);
+				branchStation.get(0).setQk(0);
+			}
+		}
 		for (ReservationStation multiplicationStation : multiplyReservationStations)
 		{
 			if (multiplicationStation.isBusy())
@@ -1815,6 +1827,14 @@ public class Tomasulo
 			{
 				storeBuffer.setQAddress(0);
 				storeBuffer.setAddress((int)result);
+			}
+		}
+		for(LoadBuffer loadBuffer : loadBuffers)
+		{
+			if(loadBuffer.isBusy() && loadBuffer.getQAddress() == tag)
+			{
+				loadBuffer.setQAddress(0);
+				loadBuffer.setAddress((int)result);
 			}
 		}
 
