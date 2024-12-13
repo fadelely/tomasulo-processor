@@ -297,18 +297,25 @@ public class App extends Application{
             }
         });
 
-        // Value column (editable)
         TableColumn<RegisterFile.IntegerRegister, String> valueColumn = new TableColumn<>("Value");
         valueColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(String.valueOf(cellData.getValue().getValue())));
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getValue()))); // Converts long to String
         valueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         valueColumn.setOnEditCommit(event -> {
             RegisterFile.IntegerRegister register = event.getRowValue();
             try {
-                register.setValue(Integer.parseInt(event.getNewValue()));
+                // Parse the input as a 64-bit long value
+                System.out.println("new value is ");
+
+                long newValue = Long.parseLong(event.getNewValue());
+                System.out.println("new value is "+newValue);
+
+                register.setValue(newValue); // Set the new value to the LongProperty
+                System.out.println("new value is "+newValue);
             } catch (NumberFormatException e) {
-                // Handle invalid input (e.g., show an alert)
-                register.setValue(register.getValue()); // Reset to previous value
+                // Handle invalid input (e.g., show an alert or reset to previous value)
+                System.out.println("Could not parse the value"+e.getMessage());
+                register.setValue(register.getValue()); // Reset to the previous valid value
             }
         });
 
@@ -347,7 +354,7 @@ public class App extends Application{
         valueColumn.setOnEditCommit(event -> {
             RegisterFile.FloatingRegister register = event.getRowValue();
             try {
-                register.setValue(Integer.parseInt(event.getNewValue())); // Set the Value
+                register.setValue(Double.parseDouble(event.getNewValue())); // Set the Value
             } catch (NumberFormatException e) {
                 // Handle invalid input (e.g., show an alert)
                 register.setValue(register.getValue()); // Reset to previous value if invalid input
