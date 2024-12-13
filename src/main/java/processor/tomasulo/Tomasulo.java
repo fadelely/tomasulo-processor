@@ -1500,14 +1500,12 @@ public class Tomasulo
 						storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
 					}
 				}
-				else
+				else if(storeBuffer.getExecutionTime() > 0)
 				{
 					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
 					storeBuffer.fillingCache--;
 					if (storeBuffer.fillingCache == 0) cache.filledCache(storeBuffer.getAddress());
 				}
-				if (storeBuffer.getExecutionTime() > 0 && storeBuffer.getQ() == 0)
-					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
 				// since store never writes to the bus, it can finish execution once is result is ready, no  matter
 				// who is publishing on the bus
 				else if (storeBuffer.getExecutionTime() == 0)
@@ -1527,7 +1525,7 @@ public class Tomasulo
 						Memory.storeDouble(storeBuffer.getAddress(), storeBuffer.getV());
 						break;
 					}
-					logUpdate("Store buffer S" + getTagString(storeBuffer.getTag()) + " is publishing!");
+					logUpdate("Store buffer " + getTagString(storeBuffer.getTag()) + " is publishing!");
 					fullStoreBuffers = false;
 					storeBuffer.firstExecution = true;
 					storeBuffer.setBusy(false);
