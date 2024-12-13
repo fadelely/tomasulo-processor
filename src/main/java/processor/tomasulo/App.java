@@ -52,11 +52,18 @@ public class App extends Application{
         TableColumn<Tomasulo.ReservationStation, Double> vkColumn = new TableColumn<>("Vk");
         vkColumn.setCellValueFactory(new PropertyValueFactory<>("vk"));
 
-        TableColumn<Tomasulo.ReservationStation, Double> qjColumn = new TableColumn<>("Qj");
-        qjColumn.setCellValueFactory(new PropertyValueFactory<>("qj"));
+        TableColumn<Tomasulo.ReservationStation, String> qjColumn = new TableColumn<>("Qj");
+        qjColumn.setCellValueFactory(cellData -> {
+            Tomasulo.ReservationStation reservationStation = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(reservationStation.getQj()), reservationStation.qjProperty());
+        });
 
-        TableColumn<Tomasulo.ReservationStation, Double> qkColumn = new TableColumn<>("Qk");
-        qkColumn.setCellValueFactory(new PropertyValueFactory<>("qk"));
+        TableColumn<Tomasulo.ReservationStation, String> qkColumn = new TableColumn<>("Qk");
+        qkColumn.setCellValueFactory(cellData -> {
+            Tomasulo.ReservationStation reservationStation = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(reservationStation.getQk()), reservationStation.qkProperty());
+        });
+
 
         TableColumn<Tomasulo.ReservationStation, Double> executionColumn = new TableColumn<>("Cycles");
         executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
@@ -112,8 +119,11 @@ public class App extends Application{
         TableColumn<Tomasulo.StoreBuffer, Number> vColumn = new TableColumn<>("V");
         vColumn.setCellValueFactory(new PropertyValueFactory<>("V"));
 
-        TableColumn<Tomasulo.StoreBuffer, Number> qColumn = new TableColumn<>("Q");
-        qColumn.setCellValueFactory(new PropertyValueFactory<>("Q"));
+        TableColumn<Tomasulo.StoreBuffer, String> qColumn = new TableColumn<>("Q");
+        qColumn.setCellValueFactory(cellData -> {
+            Tomasulo.StoreBuffer storeBuffer = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(storeBuffer.getQ()), storeBuffer.QProperty());
+        });
 
         TableColumn<Tomasulo.StoreBuffer, Double> executionColumn = new TableColumn<>("Cycles");
         executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
@@ -128,7 +138,59 @@ public class App extends Application{
 
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    }     
+    }
+
+    private void setupImmediateTable(TableView<Tomasulo.IntegerReservationStation> table) {
+
+        TableColumn<Tomasulo.IntegerReservationStation, Number> tagColumn = new TableColumn<>("Tag");
+        tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
+
+        TableColumn<Tomasulo.IntegerReservationStation, Boolean> busyColumn = new TableColumn<>("Busy");
+        busyColumn.setCellValueFactory(new PropertyValueFactory<>("busy"));
+
+        TableColumn<Tomasulo.IntegerReservationStation, String> opcodeColumn = new TableColumn<>("Opcode");
+        opcodeColumn.setCellValueFactory(new PropertyValueFactory<>("opcode"));
+
+        TableColumn<Tomasulo.IntegerReservationStation, Number> vjColumn = new TableColumn<>("Vj");
+        vjColumn.setCellValueFactory(new PropertyValueFactory<>("vj"));
+
+        TableColumn<Tomasulo.IntegerReservationStation, Number> vkColumn = new TableColumn<>("Vk");
+        vkColumn.setCellValueFactory(new PropertyValueFactory<>("vk"));
+
+        TableColumn<Tomasulo.IntegerReservationStation, String> qjColumn = new TableColumn<>("Qj");
+        qjColumn.setCellValueFactory(cellData -> {
+            Tomasulo.IntegerReservationStation station = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(station.getQj()), station.qjProperty());
+        });
+
+        // Updated Qk column with dynamic string binding
+        TableColumn<Tomasulo.IntegerReservationStation, String> qkColumn = new TableColumn<>("Qk");
+        qkColumn.setCellValueFactory(cellData -> {
+            Tomasulo.IntegerReservationStation station = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(station.getQk()), station.qkProperty());
+        });
+
+        TableColumn<Tomasulo.IntegerReservationStation, Number> executionTimeColumn = new TableColumn<>("Cycles");
+        executionTimeColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
+
+        // Add columns to the table
+        table.getColumns().addAll(
+                tagColumn, busyColumn, opcodeColumn,
+                vjColumn, vkColumn, qjColumn, qkColumn,
+                 executionTimeColumn
+        );
+
+        // Set fixed cell size
+        double cellSize = 25; // Adjust as needed
+        table.setFixedCellSize(cellSize);
+        double tableHeaderHeight = 28; // Approximate header height
+        int maxRows = 10; // Adjust as needed
+        table.setPrefHeight((maxRows * table.getFixedCellSize()) + tableHeaderHeight);
+
+        // Set table properties (optional)
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
     private void setupIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
         // Column for the register name
         TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
@@ -186,11 +248,18 @@ public class App extends Application{
         TableColumn<Tomasulo.BranchStation, Double> vkColumn = new TableColumn<>("Vk");
         vkColumn.setCellValueFactory(new PropertyValueFactory<>("vk"));
 
-        TableColumn<Tomasulo.BranchStation, Double> qjColumn = new TableColumn<>("Qj");
-        qjColumn.setCellValueFactory(new PropertyValueFactory<>("qj"));
+        TableColumn<Tomasulo.BranchStation, String> qjColumn = new TableColumn<>("Qj");
+        qjColumn.setCellValueFactory(cellData -> {
+            Tomasulo.BranchStation station = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(station.getQj()), station.qjProperty());
+        });
 
-        TableColumn<Tomasulo.BranchStation, Double> qkColumn = new TableColumn<>("Qk");
-        qkColumn.setCellValueFactory(new PropertyValueFactory<>("qk"));
+        // Updated Qk column with dynamic string binding
+        TableColumn<Tomasulo.BranchStation, String> qkColumn = new TableColumn<>("Qk");
+        qkColumn.setCellValueFactory(cellData -> {
+            Tomasulo.BranchStation station = cellData.getValue();
+            return Bindings.createStringBinding(() -> tomasulo.getTagString(station.getQk()), station.qkProperty());
+        });
 
         TableColumn<Tomasulo.BranchStation, Double> addressColumn = new TableColumn<>("Address");
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
@@ -338,7 +407,6 @@ public class App extends Application{
         });
     }
 
-
     private <T> void customizeTagColumn(TableView<T> table, String prefix) {
         TableColumn<T, String> tagColumn = (TableColumn<T, String>) table.getColumns()
                 .stream()
@@ -376,6 +444,11 @@ public class App extends Application{
 
     }
 
+    private void populateTableImmediate(TableView<Tomasulo.IntegerReservationStation> table, ObservableList<Tomasulo.IntegerReservationStation> reservationStations) {
+        table.setItems(reservationStations);
+        customizeTagColumn(table, "I");
+    }
+
     private void populateIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table, RegisterFile registerFile) {
         ObservableList<RegisterFile.IntegerRegister> data = FXCollections.observableArrayList();
         data.addAll(RegisterFile.integerRegisters);
@@ -409,7 +482,7 @@ public class App extends Application{
         // AddReservation table
         TableView<Tomasulo.ReservationStation> addStationTable = new TableView<>();
         setupTable(addStationTable);
-        Label addStationLabel = new Label("AddReservation");
+        Label addStationLabel = new Label("Add station");
         VBox addStationBox = new VBox(10, addStationLabel, addStationTable);
         addStationBox.setPrefWidth(300);
         populateTableAdd(addStationTable, Tomasulo.addReservationStations);
@@ -419,18 +492,28 @@ public class App extends Application{
         // MultiplyReservation table
         TableView<Tomasulo.ReservationStation> multiplyStationTable = new TableView<>();
         setupTable(multiplyStationTable);
-        Label multiplyStationLabel = new Label("MultiplyReservation");
+        Label multiplyStationLabel = new Label("Multiplication station");
         VBox multiplyStationBox = new VBox(10, multiplyStationLabel, multiplyStationTable);
         multiplyStationBox.setPrefWidth(300);
         populateTableMultiply(multiplyStationTable, Tomasulo.multiplyReservationStations);
         return multiplyStationBox;
+    }
+    private VBox putImmediateStationBox(){
+        // ImmediateReservation table
+        TableView<Tomasulo.IntegerReservationStation> immediateStationTable = new TableView<>();
+        setupImmediateTable(immediateStationTable);
+        Label immediateStationLabel = new Label("Immediate station");
+        VBox immediateStationBox = new VBox(10, immediateStationLabel, immediateStationTable);
+        immediateStationBox.setPrefWidth(400);
+        populateTableImmediate(immediateStationTable, Tomasulo.integerReservationStations);
+        return immediateStationBox;
     }
 
     private VBox putStoreStationBox(){
         // StoreReservation table
         TableView<Tomasulo.StoreBuffer> storeStationTable = new TableView<>();
         setupTableStore(storeStationTable);
-        Label storeStationLabel = new Label("StoreBuffer");
+        Label storeStationLabel = new Label("Store Buffer");
         VBox storeStationBox = new VBox(10, storeStationLabel, storeStationTable);
         storeStationBox.setPrefWidth(250);
         populateTableStore(storeStationTable, Tomasulo.storeBuffers);
@@ -441,12 +524,14 @@ public class App extends Application{
         // LoadReservation table
         TableView<Tomasulo.LoadBuffer> loadStationTable = new TableView<>();
         setupTableLoad(loadStationTable);
-        Label loadStationLabel = new Label("LoadBuffer");
+        Label loadStationLabel = new Label("Load Buffer");
         VBox loadStationBox = new VBox(10, loadStationLabel, loadStationTable);
         loadStationBox.setPrefWidth(150);
         populateTableLoad(loadStationTable, Tomasulo.loadBuffers);
         return loadStationBox;
     }
+
+
     private VBox putIntegerRegistersBox(){
         // Integer Registers table
         TableView<RegisterFile.IntegerRegister> integerTable = new TableView<>();
@@ -473,7 +558,7 @@ public class App extends Application{
         // BranchStation table
         TableView<Tomasulo.BranchStation> branchStationTable = new TableView<>();
         setupTableBranch(branchStationTable); // Setup table with branch-specific columns
-        Label branchStationLabel = new Label("BranchReservation");
+        Label branchStationLabel = new Label("Branch station");
         VBox branchStationBox = new VBox(10, branchStationLabel, branchStationTable);
         branchStationBox.setPrefWidth(300);
         populateTableBranch(branchStationTable, Tomasulo.branchStation); // Populate the table with branch station data
@@ -525,6 +610,7 @@ public class App extends Application{
         // Create the input fields for each variable, initially empty
         TextField addReservationStationsField = new TextField("");
         TextField multiplyReservationStationsField = new TextField("");
+        TextField immediatesField = new TextField("");
         TextField loadBuffersField = new TextField("");
         TextField storeBuffersField = new TextField("");
         TextField blockSizeField = new TextField("");
@@ -532,37 +618,40 @@ public class App extends Application{
 
 
 
-        TextField loadBufferExecutionTimeField = new TextField("");
-        TextField storeBufferExecutionTimeField = new TextField("");
+
         TextField addReservationStationExecutionTimeField = new TextField("");
         TextField addImmReservationStationExecutionTimeField = new TextField("");
         TextField subReservationStationExecutionTimeField = new TextField("");
         TextField subImmReservationStationExecutionTimeField = new TextField("");
         TextField multiplyReservationStationExecutionTimeField = new TextField("");
         TextField divideReservationStationExecutionTimeField = new TextField("");
+        TextField loadBufferExecutionTimeField = new TextField("");
+        TextField storeBufferExecutionTimeField = new TextField("");
 
         // Labels for sizes
-        Label addReservationStationsLabel = new Label("Add Reservation Stations Size:");
-        Label multiplyReservationStationsLabel = new Label("Multiply Reservation Stations Size:");
-        Label loadBuffersLabel = new Label("Load Buffers Size:");
-        Label storeBuffersLabel = new Label("Store Buffers Size:");
+        Label addReservationStationsLabel = new Label("Add Station Size:");
+        Label multiplyReservationStationsLabel = new Label("Multiplication Station Size:");
+        Label immediatesLabel = new Label("Immediate Station Size:");
+        Label loadBuffersLabel = new Label("Load Buffer Size:");
+        Label storeBuffersLabel = new Label("Store Buffer Size:");
         Label blockSizeLabel = new Label("Block Size:");
         Label cacheSizeLabel = new Label("Cache Size:");
 
-        // Labels for execution times
-        Label loadBufferExecutionTimeLabel = new Label("Load Buffer Execution Time:");
-        Label storeBufferExecutionTimeLabel = new Label("Store Buffer Execution Time:");
-        Label addReservationStationExecutionTimeLabel = new Label("Add Reservation Station Execution Time:");
-        Label addImmReservationStationExecutionTimeLabel = new Label("Add Reservation Station Immediate Time:");
-        Label subReservationStationExecutionTimeLabel = new Label("Sub Reservation Station Execution Time:");
-        Label subImmReservationStationExecutionTimeLabel = new Label("Sub Reservation Station Immediate Time:");
-        Label multiplyReservationStationExecutionTimeLabel = new Label("Multiply Reservation Station Execution Time:");
-        Label divideReservationStationExecutionTimeLabel = new Label("Divide Reservation Station Execution Time:");
+
+        Label addReservationStationExecutionTimeLabel = new Label("Add Execution Time:");
+        Label addImmReservationStationExecutionTimeLabel = new Label("Add Immediate Execution Time:");
+        Label subReservationStationExecutionTimeLabel = new Label("Subtraction Execution Time:");
+        Label subImmReservationStationExecutionTimeLabel = new Label("Subtraction Immediate ExecutionTime:");
+        Label multiplyReservationStationExecutionTimeLabel = new Label("Multiplication Execution Time:");
+        Label divideReservationStationExecutionTimeLabel = new Label("Division Execution Time:");
+        Label loadBufferExecutionTimeLabel = new Label("Load Execution Time:");
+        Label storeBufferExecutionTimeLabel = new Label("Store Execution Time:");
 
         // VBox for sizes
         VBox sizesBox = new VBox(10,
                 addReservationStationsLabel, addReservationStationsField,
                 multiplyReservationStationsLabel, multiplyReservationStationsField,
+                immediatesLabel, immediatesField,
                 loadBuffersLabel, loadBuffersField,
                 storeBuffersLabel, storeBuffersField,
                 blockSizeLabel, blockSizeField,
@@ -572,14 +661,14 @@ public class App extends Application{
 
         // VBox for execution times
         VBox executionTimesBox = new VBox(10,
-                loadBufferExecutionTimeLabel, loadBufferExecutionTimeField,
-                storeBufferExecutionTimeLabel, storeBufferExecutionTimeField,
                 addReservationStationExecutionTimeLabel, addReservationStationExecutionTimeField,
                 addImmReservationStationExecutionTimeLabel, addImmReservationStationExecutionTimeField,
                 subReservationStationExecutionTimeLabel, subReservationStationExecutionTimeField,
                 subImmReservationStationExecutionTimeLabel, subImmReservationStationExecutionTimeField,
                 multiplyReservationStationExecutionTimeLabel, multiplyReservationStationExecutionTimeField,
-                divideReservationStationExecutionTimeLabel, divideReservationStationExecutionTimeField
+                divideReservationStationExecutionTimeLabel, divideReservationStationExecutionTimeField,
+                loadBufferExecutionTimeLabel, loadBufferExecutionTimeField,
+                storeBufferExecutionTimeLabel, storeBufferExecutionTimeField
         );
 
         HBox editableIntegerBox = putEditableIntegerRegistersBox();
@@ -590,6 +679,7 @@ public class App extends Application{
             try {
                 Tomasulo.addReservationStationsSize = parseField(addReservationStationsField, Tomasulo.addReservationStationsSize);
                 Tomasulo.multiplyReservationStationsSize = parseField(multiplyReservationStationsField, Tomasulo.multiplyReservationStationsSize);
+                Tomasulo.immediateReservationStationSize = parseField(immediatesField, Tomasulo.immediateReservationStationSize);
                 Tomasulo.loadBuffersSize = parseField(loadBuffersField, Tomasulo.loadBuffersSize);
                 Tomasulo.storeBuffersSize = parseField(storeBuffersField, Tomasulo.storeBuffersSize);
                 Tomasulo.blockSize = parseField(blockSizeField, Tomasulo.blockSize);
@@ -713,6 +803,7 @@ public class App extends Application{
         VBox multiplyStationBox = putMultiplyStationBox();
         VBox storeStationBox = putStoreStationBox();
         VBox loadStationBox = putLoadStationBox();
+        VBox immediateStationBox = putImmediateStationBox();
        
       
 
@@ -727,12 +818,14 @@ public class App extends Application{
         VBox clockCycleBox = new VBox(10, clockCycleLabel);
         clockCycleBox.setPrefWidth(150);
 
+        VBox branchAndClockBox = new VBox(20, branchStationBox, clockCycleBox);
+
 
         // HBox to place Integer and Floating Registers next to each other
-        HBox registersBox = new HBox(20, integerBox, floatingBox,branchStationBox,clockCycleBox);
+        HBox registersBox = new HBox(20, integerBox, floatingBox,immediateStationBox,branchAndClockBox);
 
         // Layout to align tables horizontally (without Integer Registers)
-        HBox tablesBox = new HBox(20, addStationBox, multiplyStationBox, storeStationBox, loadStationBox);
+        HBox tablesBox = new HBox(40, addStationBox, multiplyStationBox, storeStationBox, loadStationBox);
         HBox.setHgrow(addStationBox, Priority.ALWAYS);
         HBox.setHgrow(multiplyStationBox, Priority.ALWAYS);
         HBox.setHgrow(storeStationBox, Priority.ALWAYS);

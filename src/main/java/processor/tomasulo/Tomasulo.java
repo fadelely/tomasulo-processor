@@ -934,40 +934,31 @@ public class Tomasulo
 		Tomasulo.instructions = parseText.parseTextFile();
 	}
 
-	public String getTagString(int tag)
-	{
+	public String getTagString(int tag) {
 		// Check the tag's range and return the corresponding string
 		if (tag == 0) return "0";
 
-		if (tag <= addReservationStationsSize)
-		{
+		if (tag <= addReservationStationsSize) {
 			// Tag falls within the "Add" Reservation Stations range
 			return "A" + tag;
-		}
-		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize)
-		{
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize) {
 			// Tag falls within the "Multiply" Reservation Stations range
 			return "M" + (tag - addReservationStationsSize); // Adjust the tag for the M range
-		}
-		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize)
-		{
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize) {
 			// Tag falls within the "Load" Buffers range
 			return "L" + (tag - addReservationStationsSize - multiplyReservationStationsSize); // Adjust the tag for the L range
-		}
-		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
-				+ storeBuffersSize)
-		{
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
+				+ storeBuffersSize) {
 			// Tag falls within the "Store" Buffers range
 			return "S" + (tag - addReservationStationsSize - multiplyReservationStationsSize - loadBuffersSize); // Adjust the tag for the S range
-		}
-		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
-				+ storeBuffersSize + immediateReservationStationSize)
-		{
+		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
+				+ storeBuffersSize + immediateReservationStationSize) {
+			// Tag falls within the "Immediate" Reservation Stations range
+			return "I" + (tag - addReservationStationsSize - multiplyReservationStationsSize - loadBuffersSize - storeBuffersSize); // Adjust the tag for the I range
+		} else {
 			// If the tag is out of bounds (greater than all ranges)
-			return "A" + (tag - multiplyReservationStationsSize - loadBuffersSize - storeBuffersSize); 
-		}
-		else
 			return "invalid tag";
+		}
 	}
 
 	public void init() throws IOException
