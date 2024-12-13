@@ -22,6 +22,7 @@ public class Tomasulo
 		private final IntegerProperty tag;
 		private final IntegerProperty address;
 
+		private final IntegerProperty QAddress;
 		private final IntegerProperty executionTime;
 
 		public boolean firstExecution;
@@ -38,6 +39,7 @@ public class Tomasulo
 			this.executionTime = new SimpleIntegerProperty(0);
 			firstExecution = true;
 			fillingCache = 0;
+			this.QAddress = new SimpleIntegerProperty(0);
 		}
 
 		// Getter and Setter for busy
@@ -81,6 +83,21 @@ public class Tomasulo
 		public void setAddress(int address)
 		{
 			this.address.set(address);
+		}
+
+		public IntegerProperty QAddressProperty()
+		{
+			return QAddress;
+		}
+
+		public int getQAddress()
+		{
+			return QAddress.get();
+		}
+
+		public void setQAddress(int q)
+		{
+			this.QAddress.set(q);
 		}
 
 		public IntegerProperty addressProperty()
@@ -145,6 +162,7 @@ public class Tomasulo
 		private final IntegerProperty tag;
 		private final DoubleProperty V;
 		private final IntegerProperty Q;
+		private final IntegerProperty QAddress;
 		private final IntegerProperty address;
 		private final StringProperty opcode;
 
@@ -163,6 +181,8 @@ public class Tomasulo
 			this.Q = new SimpleIntegerProperty(0);
 			this.address = new SimpleIntegerProperty(0);
 			this.executionTime = new SimpleIntegerProperty(0);
+			this.QAddress = new SimpleIntegerProperty(0);
+			this.fillingCache = 0;
 		}
 
 		// Getter and Setter for busy
@@ -227,6 +247,21 @@ public class Tomasulo
 		public void setQ(int q)
 		{
 			this.Q.set(q);
+		}
+
+		public IntegerProperty QAddressProperty()
+		{
+			return QAddress;
+		}
+
+		public int getQAddress()
+		{
+			return QAddress.get();
+		}
+
+		public void setQAddress(int q)
+		{
+			this.QAddress.set(q);
 		}
 
 		// Getter and Setter for address
@@ -936,28 +971,41 @@ public class Tomasulo
 		Tomasulo.instructions = parseText.parseTextFile();
 	}
 
-	public String getTagString(int tag) {
+	public String getTagString(int tag)
+	{
 		// Check the tag's range and return the corresponding string
 		if (tag == 0) return "0";
 
-		if (tag <= addReservationStationsSize) {
+		if (tag <= addReservationStationsSize)
+		{
 			// Tag falls within the "Add" Reservation Stations range
 			return "A" + tag;
-		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize) {
+		}
+		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize)
+		{
 			// Tag falls within the "Multiply" Reservation Stations range
 			return "M" + (tag - addReservationStationsSize); // Adjust the tag for the M range
-		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize) {
+		}
+		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize)
+		{
 			// Tag falls within the "Load" Buffers range
 			return "L" + (tag - addReservationStationsSize - multiplyReservationStationsSize); // Adjust the tag for the L range
-		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
-				+ storeBuffersSize) {
+		}
+		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
+				+ storeBuffersSize)
+		{
 			// Tag falls within the "Store" Buffers range
 			return "S" + (tag - addReservationStationsSize - multiplyReservationStationsSize - loadBuffersSize); // Adjust the tag for the S range
-		} else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
-				+ storeBuffersSize + immediateReservationStationSize) {
+		}
+		else if (tag <= addReservationStationsSize + multiplyReservationStationsSize + loadBuffersSize
+				+ storeBuffersSize + immediateReservationStationSize)
+		{
 			// Tag falls within the "Immediate" Reservation Stations range
-			return "I" + (tag - addReservationStationsSize - multiplyReservationStationsSize - loadBuffersSize - storeBuffersSize); // Adjust the tag for the I range
-		} else {
+			return "I" + (tag - addReservationStationsSize - multiplyReservationStationsSize - loadBuffersSize
+					- storeBuffersSize); // Adjust the tag for the I range
+		}
+		else
+		{
 			// If the tag is out of bounds (greater than all ranges)
 			return "invalid tag";
 		}
@@ -1061,209 +1109,255 @@ public class Tomasulo
 
 		if (parseText.isFloatOperation(OPCode))
 		{
-			// check for empty addition stations, if none are avaliable, stall
-			ReservationStation freeReservationStation = null;
-			for (ReservationStation addReservationStation : addReservationStations)
-				if (!addReservationStation.isBusy())
-				{
-					freeReservationStation = addReservationStation;
-					break;
-				}
-
-			if (freeReservationStation == null)
-			{
-				logUpdate("Stalled due to full reservation station...");
-				fullAddStations = true;
-				return;
-			}
-
-			freeReservationStation.setBusy(true);
-			freeReservationStation.setOpcode(OPCode);
-			if (parseText.isFloatAdditionOperation(OPCode))
-				freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
-			else if (parseText.isFloatSubtractionOperation(OPCode))
-				freeReservationStation.setExecutionTime(SubReservationStationExecutionTime);
-
-			freeReservationStation.setIssueTime(getClockCycle());
-			String F1 = parsedInstruction[1]; // string as this is where we will save our result
-			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
-			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
-			freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
-			freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
-			if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
-			if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
-			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
-
+			issueFloatAdd(OPCode, parsedInstruction);
 		}
 		else if (parseText.isIntegerOperation((OPCode)))
 		{
-			// check for empty addition stations, if none are avaliable, stall
-			IntegerReservationStation freeReservationStation = null;
-			for (IntegerReservationStation immediateReservationStation : integerReservationStations)
-				if (!immediateReservationStation.isBusy())
-				{
-					freeReservationStation = immediateReservationStation;
-					break;
-				}
-
-			if (freeReservationStation == null)
-			{
-				logUpdate("Stalled due to full reservation station...");
-				fullImmediateStations = true;
-				return;
-			}
-
-			freeReservationStation.setBusy(true);
-			freeReservationStation.setOpcode(OPCode);
-			freeReservationStation.setIssueTime(getClockCycle());
-
-			if (parseText.isIntegerAdditionOperation(OPCode))
-				freeReservationStation.setExecutionTime(AddImmReservationStationExecutionTime);
-			else if (parseText.isIntegerSubtractionOperation(OPCode))
-				freeReservationStation.setExecutionTime(SubImmReservationStationExecutionTime);
-
-			String R1 = parsedInstruction[1]; // string as this is where we will save our result
-			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
-			short immediate = Short.valueOf(parsedInstruction[3]);
-
-			freeReservationStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
-			freeReservationStation.setQk(0); // since it only reads one register :)
-			if (R2.getQi() == 0) freeReservationStation.setVj(R2.getValue());
-			freeReservationStation.setVk(immediate);
-			RegisterFile.writeTagToRegisterFile(R1, freeReservationStation.getTag());
-
+			issueImmediate(OPCode, parsedInstruction);
 		}
 		else if (parseText.isMultiplyOrDivideOperation(OPCode))
 		{
-			ReservationStation freeReservationStation = null;
-			for (ReservationStation multiplyReservationStation : multiplyReservationStations)
-				if (!multiplyReservationStation.isBusy())
-				{
-					freeReservationStation = multiplyReservationStation;
-					break;
-				}
-
-			if (freeReservationStation == null)
-			{
-				logUpdate("Stalled due to full reservation station...");
-				fullMultiplyStations = true;
-				stalled = true;
-				return;
-			}
-
-			freeReservationStation.setBusy(true);
-			freeReservationStation.setOpcode(OPCode);
-			if (parseText.isMultiplyOperation(OPCode))
-				freeReservationStation.setExecutionTime(MultiplyReservationStationExecutionTime);
-			if (parseText.isDivideOperation(OPCode))
-				freeReservationStation.setExecutionTime(DivideReservationStationExecutionTime);
-
-			freeReservationStation.setIssueTime(getClockCycle());
-			String F1 = parsedInstruction[1]; // string as this is where we will save our result
-			FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
-			FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
-			freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
-			freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
-			if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
-			if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
-			RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
-
+			issueMultiply(OPCode, parsedInstruction);
 		}
 		else if (parseText.isLoadOperation(OPCode))
 		{
-			/*
-			 * logically, it should be long, since the memory is 64 bits, but a limitation of java
-			 * is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only
-			 */
-			LoadBuffer freeLoadBuffer = null;
-			for (LoadBuffer loadBuffer : loadBuffers)
-			{
-				if (!loadBuffer.isBusy())
-				{
-					freeLoadBuffer = loadBuffer;
-					break;
-				}
-			}
-
-			if (freeLoadBuffer == null)
-			{
-				logUpdate("Stalled due to full reservation station...");
-				fullLoadBuffers = true;
-				return;
-			}
-
-			String R1 = parsedInstruction[1]; // can be integer or floating register
-			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
-
-			freeLoadBuffer.setBusy(true);
-			freeLoadBuffer.setAddress(memoryAddress);
-			freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
-			freeLoadBuffer.setOpcode(OPCode);
-			freeLoadBuffer.setIssueTime(getClockCycle());
-			RegisterFile.writeTagToRegisterFile(R1, freeLoadBuffer.getTag());
-
+			issueLoad(OPCode, parsedInstruction);
 		}
 		else if (parseText.isStoreOperation(OPCode))
 		{
-			/*
-			 * logically, it should be long, since the memory is 64 bits, but a limitation of java
-			 * is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only
-			 */
-			StoreBuffer freeStoreBuffer = null;
-			for (StoreBuffer storeBuffer : storeBuffers)
-				if (!storeBuffer.isBusy())
-				{
-					freeStoreBuffer = storeBuffer;
-					break;
-				}
-
-			if (freeStoreBuffer == null)
-			{
-				logUpdate("Stalled due to full reservation station...");
-				fullStoreBuffers = true;
-				return;
-			}
-
-			int memoryAddress = Integer.parseInt(parsedInstruction[2]);
-
-			if (parseText.isIntegerStoreOperation(OPCode))
-			{
-				IntegerRegister R1 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
-				freeStoreBuffer.setQ(R1.getQi()); // if its 0, woo, if not, it saves it :)
-				if (R1.getQi() == 0) freeStoreBuffer.setV(R1.getValue());
-			}
-			// don't need the if since the else will always be true, but it is
-			// left for readibility's sake
-			else if (parseText.isFloatStoreOperation(OPCode))
-			{
-				FloatingRegister F1 = RegisterFile.readFloatRegister(parsedInstruction[1]);
-				freeStoreBuffer.setQ(F1.getQi()); // if its 0, woo, if not, it saves it :)
-				if (F1.getQi() == 0) freeStoreBuffer.setV(F1.getValue());
-			}
-
-			freeStoreBuffer.setBusy(true);
-			freeStoreBuffer.setAddress(memoryAddress);
-			freeStoreBuffer.setExecutionTime(StoreBufferExecutionTime);
-			freeStoreBuffer.setOpcode(OPCode);
-			freeStoreBuffer.setIssueTime(getClockCycle());
+			issueStore(OPCode, parsedInstruction);
 		}
 		else if (parseText.isBranchOperation(OPCode))
 		{
-			isBranching = true;
-			BranchStation freeBranchStation = branchStation.get(0);
-			freeBranchStation.setBusy(true);
-			freeBranchStation.setOpcode(OPCode);
-			freeBranchStation.setExecutionTime(BranchReservationStationExecutionTime);
-			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
-			IntegerRegister R3 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
-			String loopAddress = parsedInstruction[3]; // string as this is where we will save our result
-			freeBranchStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
-			freeBranchStation.setQk(R3.getQi()); // if its 0, woo, if not, it saves it :)
-			freeBranchStation.setAddress(Integer.parseInt(loopAddress));
-			if (R2.getQi() == 0) freeBranchStation.setVj(R2.getValue());
-			if (R3.getQi() == 0) freeBranchStation.setVk(R3.getValue());
+			issueBranch(OPCode, parsedInstruction);
 		}
 
+	}
+
+	private void issueFloatAdd(String OPCode, String[] parsedInstruction)
+	{
+		// check for empty addition stations, if none are avaliable, stall
+		ReservationStation freeReservationStation = null;
+		for (ReservationStation addReservationStation : addReservationStations)
+			if (!addReservationStation.isBusy())
+			{
+				freeReservationStation = addReservationStation;
+				break;
+			}
+
+		if (freeReservationStation == null)
+		{
+			logUpdate("Stalled due to full reservation station...");
+			fullAddStations = true;
+			return;
+		}
+
+		freeReservationStation.setBusy(true);
+		freeReservationStation.setOpcode(OPCode);
+		if (parseText.isFloatAdditionOperation(OPCode))
+			freeReservationStation.setExecutionTime(AddReservationStationExecutionTime);
+		else if (parseText.isFloatSubtractionOperation(OPCode))
+			freeReservationStation.setExecutionTime(SubReservationStationExecutionTime);
+
+		freeReservationStation.setIssueTime(getClockCycle());
+		String F1 = parsedInstruction[1]; // string as this is where we will save our result
+		FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+		FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+		freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
+		freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
+		if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
+		if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
+		RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
+
+	}
+
+	private void issueImmediate(String OPCode, String[] parsedInstruction)
+	{
+		// check for empty addition stations, if none are avaliable, stall
+		IntegerReservationStation freeReservationStation = null;
+		for (IntegerReservationStation immediateReservationStation : integerReservationStations)
+			if (!immediateReservationStation.isBusy())
+			{
+				freeReservationStation = immediateReservationStation;
+				break;
+			}
+
+		if (freeReservationStation == null)
+		{
+			logUpdate("Stalled due to full reservation station...");
+			fullImmediateStations = true;
+			return;
+		}
+
+		freeReservationStation.setBusy(true);
+		freeReservationStation.setOpcode(OPCode);
+		freeReservationStation.setIssueTime(getClockCycle());
+
+		if (parseText.isIntegerAdditionOperation(OPCode))
+			freeReservationStation.setExecutionTime(AddImmReservationStationExecutionTime);
+		else if (parseText.isIntegerSubtractionOperation(OPCode))
+			freeReservationStation.setExecutionTime(SubImmReservationStationExecutionTime);
+
+		String R1 = parsedInstruction[1]; // string as this is where we will save our result
+		IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
+		short immediate = Short.valueOf(parsedInstruction[3]);
+
+		freeReservationStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
+		freeReservationStation.setQk(0); // since it only reads one register :)
+		if (R2.getQi() == 0) freeReservationStation.setVj(R2.getValue());
+		freeReservationStation.setVk(immediate);
+		RegisterFile.writeTagToRegisterFile(R1, freeReservationStation.getTag());
+
+	}
+
+	private void issueMultiply(String OPCode, String[] parsedInstruction)
+	{
+		ReservationStation freeReservationStation = null;
+		for (ReservationStation multiplyReservationStation : multiplyReservationStations)
+			if (!multiplyReservationStation.isBusy())
+			{
+				freeReservationStation = multiplyReservationStation;
+				break;
+			}
+
+		if (freeReservationStation == null)
+		{
+			logUpdate("Stalled due to full reservation station...");
+			fullMultiplyStations = true;
+			stalled = true;
+			return;
+		}
+
+		freeReservationStation.setBusy(true);
+		freeReservationStation.setOpcode(OPCode);
+		if (parseText.isMultiplyOperation(OPCode))
+			freeReservationStation.setExecutionTime(MultiplyReservationStationExecutionTime);
+		if (parseText.isDivideOperation(OPCode))
+			freeReservationStation.setExecutionTime(DivideReservationStationExecutionTime);
+
+		freeReservationStation.setIssueTime(getClockCycle());
+		String F1 = parsedInstruction[1]; // string as this is where we will save our result
+		FloatingRegister F2 = RegisterFile.readFloatRegister(parsedInstruction[2]);
+		FloatingRegister F3 = RegisterFile.readFloatRegister(parsedInstruction[3]);
+		freeReservationStation.setQj(F2.getQi()); // if its 0, woo, if not, it saves it :)
+		freeReservationStation.setQk(F3.getQi()); // if its 0, woo, if not, it saves it :)
+		if (F2.getQi() == 0) freeReservationStation.setVj(F2.getValue());
+		if (F3.getQi() == 0) freeReservationStation.setVk(F3.getValue());
+		RegisterFile.writeTagToRegisterFile(F1, freeReservationStation.getTag());
+
+	}
+
+	private void issueLoad(String OPCode, String[] parsedInstruction)
+	{ /*
+		 * logically, it should be long, since the memory is 64 bits, but a limitation of java
+		 * is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only
+		 */
+		LoadBuffer freeLoadBuffer = null;
+		for (LoadBuffer loadBuffer : loadBuffers)
+		{
+			if (!loadBuffer.isBusy())
+			{
+				freeLoadBuffer = loadBuffer;
+				break;
+			}
+		}
+
+		if (freeLoadBuffer == null)
+		{
+			logUpdate("Stalled due to full reservation station...");
+			fullLoadBuffers = true;
+			return;
+		}
+
+		String R1 = parsedInstruction[1]; // can be integer or floating register
+		if (parsedInstruction[2].contains("R"))
+		{
+			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
+			freeLoadBuffer.setQAddress(R2.getQi());
+			freeLoadBuffer.setAddress((int) R2.getValue());
+		}
+		else
+		{
+			freeLoadBuffer.setAddress(Integer.parseInt(parsedInstruction[2]));
+		}
+
+
+		freeLoadBuffer.setBusy(true);
+		freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
+		freeLoadBuffer.setOpcode(OPCode);
+		freeLoadBuffer.setIssueTime(getClockCycle());
+		RegisterFile.writeTagToRegisterFile(R1, freeLoadBuffer.getTag());
+
+	}
+
+	private void issueStore(String OPCode, String[] parsedInstruction)
+	{
+		/*
+		 * logically, it should be long, since the memory is 64 bits, but a limitation of java
+		 * is that arrays can only be addressed max by 2^32 - 1 numbers, or an int only
+		 */
+		StoreBuffer freeStoreBuffer = null;
+		for (StoreBuffer storeBuffer : storeBuffers)
+			if (!storeBuffer.isBusy())
+			{
+				freeStoreBuffer = storeBuffer;
+				break;
+			}
+
+		if (freeStoreBuffer == null)
+		{
+			logUpdate("Stalled due to full reservation station...");
+			fullStoreBuffers = true;
+			return;
+		}
+
+		if (parsedInstruction[2].contains("R"))
+		{
+			IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
+			freeStoreBuffer.setQAddress(R2.getQi());
+			freeStoreBuffer.setAddress((int) R2.getValue());
+		}
+		else
+		{
+			freeStoreBuffer.setAddress(Integer.parseInt(parsedInstruction[2]));
+		}
+
+		if (parseText.isIntegerStoreOperation(OPCode))
+		{
+			IntegerRegister R1 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
+			freeStoreBuffer.setQ(R1.getQi()); // if its 0, woo, if not, it saves it :)
+			if (R1.getQi() == 0) freeStoreBuffer.setV(R1.getValue());
+		}
+		// don't need the if since the else will always be true, but it is
+		// left for readibility's sake
+		else if (parseText.isFloatStoreOperation(OPCode))
+		{
+			FloatingRegister F1 = RegisterFile.readFloatRegister(parsedInstruction[1]);
+			freeStoreBuffer.setQ(F1.getQi()); // if its 0, woo, if not, it saves it :)
+			if (F1.getQi() == 0) freeStoreBuffer.setV(F1.getValue());
+		}
+
+		freeStoreBuffer.setBusy(true);
+		freeStoreBuffer.setExecutionTime(StoreBufferExecutionTime);
+		freeStoreBuffer.setOpcode(OPCode);
+		freeStoreBuffer.setIssueTime(getClockCycle());
+	}
+
+	private void issueBranch(String OPCode, String[] parsedInstruction)
+	{
+		isBranching = true;
+		BranchStation freeBranchStation = branchStation.get(0);
+		freeBranchStation.setBusy(true);
+		freeBranchStation.setOpcode(OPCode);
+		freeBranchStation.setExecutionTime(BranchReservationStationExecutionTime);
+		IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
+		IntegerRegister R3 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
+		String loopAddress = parsedInstruction[3]; // string as this is where we will save our result
+		freeBranchStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
+		freeBranchStation.setQk(R3.getQi()); // if its 0, woo, if not, it saves it :)
+		freeBranchStation.setAddress(Integer.parseInt(loopAddress));
+		if (R2.getQi() == 0) freeBranchStation.setVj(R2.getValue());
+		if (R3.getQi() == 0) freeBranchStation.setVk(R3.getValue());
 	}
 
 	/*
@@ -1286,7 +1380,6 @@ public class Tomasulo
 	 * choose the one with the lower tag number (so M1 has a higher priority
 	 * than M2, for example).
 	 */
-
 	private void executeAndWrite() throws Exception
 	{
 		int lowestIssueTime = Integer.MAX_VALUE;
@@ -1411,31 +1504,31 @@ public class Tomasulo
 
 		for (StoreBuffer storeBuffer : storeBuffers)
 		{
-			if (storeBuffer.isBusy())
+			if (storeBuffer.isBusy() && storeBuffer.getQAddress() == 0)
 			{
 
-					if (storeBuffer.firstExecution)
+				if (storeBuffer.firstExecution)
+				{
+					storeBuffer.firstExecution = false;
+					if (!cache.checkCache(storeBuffer.getAddress()))
 					{
-						storeBuffer.firstExecution = false;
-						if (!cache.checkCache(storeBuffer.getAddress()))
-						{
-							logUpdate("Cache miss! Fetching cache...");
-							storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() + 10);
-							storeBuffer.fillingCache = 10;
-							cache.writeCache(storeBuffer.getAddress());
-						}
-						else
-						{
-							logUpdate("Cache hit!");
-							storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
-						}
+						logUpdate("Cache miss! Fetching cache...");
+						storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() + 10);
+						storeBuffer.fillingCache = 10;
+						cache.writeCache(storeBuffer.getAddress());
 					}
 					else
 					{
+						logUpdate("Cache hit!");
 						storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
-						storeBuffer.fillingCache--;
-						if (storeBuffer.fillingCache == 0) cache.filledCache(storeBuffer.getAddress());
 					}
+				}
+				else
+				{
+					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
+					storeBuffer.fillingCache--;
+					if (storeBuffer.fillingCache == 0) cache.filledCache(storeBuffer.getAddress());
+				}
 				if (storeBuffer.getExecutionTime() > 0 && storeBuffer.getQ() == 0)
 					storeBuffer.setExecutionTime(storeBuffer.getExecutionTime() - 1);
 				// since store never writes to the bus, it can finish execution once is result is ready, no  matter
@@ -1584,7 +1677,6 @@ public class Tomasulo
 			publishingStation.setVj(0);
 			publishingStation.setQj(0);
 			publishingStation.setQk(0);
-			
 
 		}
 	}
@@ -1648,7 +1740,7 @@ public class Tomasulo
 			{
 				if (immediateReservationStation.getQj() == tag)
 				{
-					immediateReservationStation.setVj((long)result);
+					immediateReservationStation.setVj((long) result);
 					immediateReservationStation.setQj(0);
 				}
 			}
@@ -1718,7 +1810,11 @@ public class Tomasulo
 			{
 				storeBuffer.setQ(0);
 				storeBuffer.setV(result);
-				//				storeBuffer.setBusy(false);
+			}
+			if (storeBuffer.isBusy() && storeBuffer.getQAddress() == tag)
+			{
+				storeBuffer.setQAddress(0);
+				storeBuffer.setAddress((int)result);
 			}
 		}
 
@@ -1733,9 +1829,9 @@ public class Tomasulo
 
 		for (IntegerReservationStation immediateReservationStation : integerReservationStations)
 		{
-			if (immediateReservationStation .isBusy())
+			if (immediateReservationStation.isBusy())
 			{
-				if (immediateReservationStation .getQj() == tag)
+				if (immediateReservationStation.getQj() == tag)
 				{
 					immediateReservationStation.setVj(result);
 					immediateReservationStation.setQj(0);
