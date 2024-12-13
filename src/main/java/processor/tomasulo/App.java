@@ -80,7 +80,7 @@ public class App extends Application{
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-	private void setupTableLoad(TableView<Tomasulo.LoadBuffer> table) {
+    private void setupTableLoad(TableView<Tomasulo.LoadBuffer> table) {
 
         TableColumn<Tomasulo.LoadBuffer, Number> tagColumn = new TableColumn<>("Tag");
         tagColumn.setCellValueFactory(new PropertyValueFactory<>("tag"));
@@ -91,11 +91,20 @@ public class App extends Application{
         TableColumn<Tomasulo.LoadBuffer, Number> addressColumn = new TableColumn<>("Address");
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
 
+        TableColumn<Tomasulo.LoadBuffer, String> qaddressColumn = new TableColumn<>("QAddress");
+        qaddressColumn.setCellValueFactory(cellData -> {
+            Tomasulo.LoadBuffer loadBuffer = cellData.getValue();
+            return Bindings.createStringBinding(
+                    () -> tomasulo.getTagString(loadBuffer.getQAddress()),
+                    loadBuffer.QAddressProperty()
+            );
+        });
+
         TableColumn<Tomasulo.LoadBuffer, Double> executionColumn = new TableColumn<>("Cycles");
         executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
 
         // Add columns to the table
-        table.getColumns().addAll(tagColumn,busyColumn, addressColumn,executionColumn);
+        table.getColumns().addAll(tagColumn, busyColumn, addressColumn, qaddressColumn, executionColumn);
 
         // Set fixed cell size
         table.setFixedCellSize(cellSize); // Adjust as needed
@@ -105,6 +114,7 @@ public class App extends Application{
         // Set table properties (optional)
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
+
     private void setupTableStore(TableView<Tomasulo.StoreBuffer> table) {
 
         TableColumn<Tomasulo.StoreBuffer, Number> tagColumn = new TableColumn<>("Tag");
@@ -115,6 +125,15 @@ public class App extends Application{
 
         TableColumn<Tomasulo.StoreBuffer, Number> addressColumn = new TableColumn<>("Address");
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("address"));
+
+        TableColumn<Tomasulo.StoreBuffer, String> qaddressColumn = new TableColumn<>("QAddress");
+        qaddressColumn.setCellValueFactory(cellData -> {
+            Tomasulo.StoreBuffer StoreBuffer = cellData.getValue();
+            return Bindings.createStringBinding(
+                    () -> tomasulo.getTagString(StoreBuffer.getQAddress()),
+                    StoreBuffer.QAddressProperty()
+            );
+        });
 
         TableColumn<Tomasulo.StoreBuffer, Number> vColumn = new TableColumn<>("V");
         vColumn.setCellValueFactory(new PropertyValueFactory<>("V"));
@@ -129,7 +148,7 @@ public class App extends Application{
         executionColumn.setCellValueFactory(new PropertyValueFactory<>("executionTime"));
 
         // Add columns to the table
-        table.getColumns().addAll(tagColumn,busyColumn, addressColumn, vColumn, qColumn,executionColumn);
+        table.getColumns().addAll(tagColumn,busyColumn, addressColumn,qaddressColumn, vColumn, qColumn,executionColumn);
 
         // Set fixed cell size
         table.setFixedCellSize(cellSize); // Adjust as needed
@@ -275,7 +294,6 @@ public class App extends Application{
         table.setPrefHeight(2*(table.getFixedCellSize()) + tableHeaderHeight);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
-
     private void setupEditableIntegerRegistersTable(TableView<RegisterFile.IntegerRegister> table) {
         // Name column (non-editable)
         TableColumn<RegisterFile.IntegerRegister, String> nameColumn = new TableColumn<>("Name");
