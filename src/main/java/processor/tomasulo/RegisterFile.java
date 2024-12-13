@@ -168,7 +168,8 @@ public class RegisterFile {
 	}
 
 	public static void writeTagToRegisterFile(String register, int tag) {
-		int registerNumber = register.charAt(1) - '0';
+		String registerNumberStr = register.replaceAll("[^0-9]", "");
+		int registerNumber = Integer.parseInt(registerNumberStr);
 		switch (register.charAt(0)) {
 			case 'R':
 				IntegerRegister intReg = RegisterFile.integerRegisters[registerNumber];
