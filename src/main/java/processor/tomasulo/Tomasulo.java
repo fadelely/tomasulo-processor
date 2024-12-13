@@ -1281,7 +1281,6 @@ public class Tomasulo
 			freeLoadBuffer.setAddress(Integer.parseInt(parsedInstruction[2]));
 		}
 
-
 		freeLoadBuffer.setBusy(true);
 		freeLoadBuffer.setExecutionTime(LoadBufferExecutionTime);
 		freeLoadBuffer.setOpcode(OPCode);
@@ -1352,7 +1351,7 @@ public class Tomasulo
 		freeBranchStation.setExecutionTime(BranchReservationStationExecutionTime);
 		IntegerRegister R2 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
 		IntegerRegister R3 = RegisterFile.readIntegerRegister(parsedInstruction[2]);
-		String loopAddress = parsedInstruction[3]; 
+		String loopAddress = parsedInstruction[3];
 		freeBranchStation.setQj(R2.getQi()); // if its 0, woo, if not, it saves it :)
 		freeBranchStation.setQk(R3.getQi()); // if its 0, woo, if not, it saves it :)
 		freeBranchStation.setAddress(Integer.parseInt(loopAddress));
@@ -1385,51 +1384,6 @@ public class Tomasulo
 		int lowestIssueTime = Integer.MAX_VALUE;
 		int theStrongestOneAfterGojoOfCourse = -1;// The tag of the one that will publish (based on
 													// priority above)
-		BranchStation branchingStation = branchStation.get(0);
-		if (branchingStation.isBusy())
-		{
-			if (branchingStation.getExecutionTime() > 0 && branchingStation.getQj() == 0
-					&& branchingStation.getQk() == 0)
-				branchingStation.setExecutionTime(branchingStation.getExecutionTime() - 1);
-			else if (branchingStation.getExecutionTime() == 0)
-			{
-				isBranching = false;
-				branchingStation.setBusy(false);
-				if (branchingStation.getOpcode().equals("BNE"))
-				{
-					if (branchingStation.getVj() != branchingStation.getVk())
-					{
-						int instructionNumber = branchingStation.getAddress() / 4;
-						instructions.get(instructionNumber);
-
-						logUpdate(
-								"Branch successful, branching to instruction address " + branchingStation.getAddress());
-					}
-					else
-					{
-						logUpdate("Not branching...");
-					}
-				}
-				if (branchingStation.getOpcode().equals("BEQ"))
-				{
-					if (branchingStation.getVj() == branchingStation.getVk())
-					{
-						int instructionNumber = branchingStation.getAddress() / 4;
-						instructions.get(instructionNumber);
-
-						logUpdate(
-								"Branch successful, branching to instruction address " + branchingStation.getAddress());
-
-					}
-					else
-					{
-						logUpdate("Not branching...");
-					}
-
-				}
-
-			}
-		}
 		for (LoadBuffer loadBuffer : loadBuffers)
 		{
 			if (loadBuffer.isBusy() && loadBuffer.getQAddress() == 0)
@@ -1502,9 +1456,32 @@ public class Tomasulo
 			}
 		}
 
+		for (IntegerReservationStation immediateReservationStation : integerReservationStations)
+		{
+			if (immediateReservationStation.isBusy())
+			{
+				if (immediateReservationStation.getExecutionTime() > 0 && immediateReservationStation.getQj() == 0)
+					immediateReservationStation.setExecutionTime(immediateReservationStation.getExecutionTime() - 1);
+				else if (immediateReservationStation.getExecutionTime() == 0
+						&& lowestIssueTime > immediateReservationStation.getIssueTime())
+				{
+					lowestIssueTime = immediateReservationStation.getIssueTime();
+					theStrongestOneAfterGojoOfCourse = immediateReservationStation.getTag();
+				}
+			}
+
+		}
+		executeStore();
+		executeBranch();
+
+		if (theStrongestOneAfterGojoOfCourse != -1) publish(theStrongestOneAfterGojoOfCourse);
+	}
+
+	private void executeStore()
+	{
 		for (StoreBuffer storeBuffer : storeBuffers)
 		{
-			if (storeBuffer.isBusy() && storeBuffer.getQAddress() == 0)
+			if (storeBuffer.isBusy() && storeBuffer.getQAddress() == 0 && storeBuffer.getQ() == 0)
 			{
 
 				if (storeBuffer.firstExecution)
@@ -1561,23 +1538,62 @@ public class Tomasulo
 
 			}
 		}
-		for (IntegerReservationStation immediateReservationStation : integerReservationStations)
+	}
+
+	private void executeBranch()
+	{
+		BranchStation branchingStation = branchStation.get(0);
+		if (branchingStation.isBusy())
 		{
-			if (immediateReservationStation.isBusy())
+			if (branchingStation.getExecutionTime() > 0 && branchingStation.getQj() == 0
+					&& branchingStation.getQk() == 0)
+				branchingStation.setExecutionTime(branchingStation.getExecutionTime() - 1);
+			else if (branchingStation.getExecutionTime() == 0)
 			{
-				if (immediateReservationStation.getExecutionTime() > 0 && immediateReservationStation.getQj() == 0)
-					immediateReservationStation.setExecutionTime(immediateReservationStation.getExecutionTime() - 1);
-				else if (immediateReservationStation.getExecutionTime() == 0
-						&& lowestIssueTime > immediateReservationStation.getIssueTime())
+				isBranching = false;
+				branchingStation.setBusy(false);
+				if (branchingStation.getOpcode().equals("BNE"))
 				{
-					lowestIssueTime = immediateReservationStation.getIssueTime();
-					theStrongestOneAfterGojoOfCourse = immediateReservationStation.getTag();
+					if (branchingStation.getVj() != branchingStation.getVk())
+					{
+						int instructionNumber = branchingStation.getAddress() / 4;
+						currentInstructionIndex = instructionNumber;
+
+						logUpdate(
+								"Branch successful, branching to instruction address " + branchingStation.getAddress());
+					}
+					else
+					{
+						logUpdate("Not branching...");
+						currentInstructionIndex++;
+					}
 				}
+				else if (branchingStation.getOpcode().equals("BEQ"))
+				{
+					if (branchingStation.getVj() == branchingStation.getVk())
+					{
+						int instructionNumber = branchingStation.getAddress() / 4;
+						currentInstructionIndex = instructionNumber;
+
+						logUpdate(
+								"Branch successful, branching to instruction address " + branchingStation.getAddress());
+
+					}
+					else
+					{
+						logUpdate("Not branching...");
+						currentInstructionIndex++;
+					}
+
+				}
+				branchingStation.setAddress(0);
+				branchingStation.setOpcode("");
+				branchingStation.setQj(0);
+				branchingStation.setQk(0);
+				branchingStation.setVj(0);
+				branchingStation.setVk(0);
 			}
-
 		}
-
-		if (theStrongestOneAfterGojoOfCourse != -1) publish(theStrongestOneAfterGojoOfCourse);
 	}
 
 	private void publish(int tag) throws Exception
@@ -1767,14 +1783,14 @@ public class Tomasulo
 	public void publishIntegerResult(int tag, long result)
 	{
 
-		if(branchStation.get(0).isBusy())
+		if (branchStation.get(0).isBusy())
 		{
-			if(branchStation.get(0).getQj() == tag)
+			if (branchStation.get(0).getQj() == tag)
 			{
 				branchStation.get(0).setVj(result);
 				branchStation.get(0).setQj(0);
 			}
-			if(branchStation.get(0).getQk() == tag)
+			if (branchStation.get(0).getQk() == tag)
 			{
 				branchStation.get(0).setVk(result);
 				branchStation.get(0).setQk(0);
@@ -1826,15 +1842,15 @@ public class Tomasulo
 			if (storeBuffer.isBusy() && storeBuffer.getQAddress() == tag)
 			{
 				storeBuffer.setQAddress(0);
-				storeBuffer.setAddress((int)result);
+				storeBuffer.setAddress((int) result);
 			}
 		}
-		for(LoadBuffer loadBuffer : loadBuffers)
+		for (LoadBuffer loadBuffer : loadBuffers)
 		{
-			if(loadBuffer.isBusy() && loadBuffer.getQAddress() == tag)
+			if (loadBuffer.isBusy() && loadBuffer.getQAddress() == tag)
 			{
 				loadBuffer.setQAddress(0);
-				loadBuffer.setAddress((int)result);
+				loadBuffer.setAddress((int) result);
 			}
 		}
 
