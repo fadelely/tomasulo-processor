@@ -169,6 +169,7 @@ public class Tomasulo
 		private final IntegerProperty executionTime;
 		public boolean firstExecution;
 		public int fillingCache;
+		public long vLong;
 
 		// Constructor
 		public StoreBuffer(int tag)
@@ -184,6 +185,7 @@ public class Tomasulo
 			this.QAddress = new SimpleIntegerProperty(0);
 			this.fillingCache = 0;
 			this.firstExecution = true;
+			this.vLong = 0;
 		}
 
 		// Getter and Setter for busy
@@ -1326,7 +1328,10 @@ public class Tomasulo
 		{
 			IntegerRegister R1 = RegisterFile.readIntegerRegister(parsedInstruction[1]);
 			freeStoreBuffer.setQ(R1.getQi()); // if its 0, woo, if not, it saves it :)
-			if (R1.getQi() == 0) freeStoreBuffer.setV(R1.getValue());
+			if (R1.getQi() == 0) {
+				freeStoreBuffer.setV(R1.getValue());
+				freeStoreBuffer.vLong = R1.getValue();
+			}
 		}
 		// don't need the if since the else will always be true, but it is
 		// left for readibility's sake
@@ -1517,7 +1522,7 @@ public class Tomasulo
 						Memory.storeWord(storeBuffer.getAddress(), (int) storeBuffer.getV());
 						break;
 					case "SD":
-						Memory.storeDoubleWord(storeBuffer.getAddress(), (long) storeBuffer.getV());
+						Memory.storeDoubleWord(storeBuffer.getAddress(), storeBuffer.vLong);
 						break;
 					case "S.S":
 						Memory.storeSingle(storeBuffer.getAddress(), (float) storeBuffer.getV());
@@ -1533,6 +1538,7 @@ public class Tomasulo
 					storeBuffer.setV(0);
 					storeBuffer.setQ(0);
 					storeBuffer.setAddress(0);
+					storeBuffer.vLong = 0;
 				}
 
 			}
@@ -1837,6 +1843,7 @@ public class Tomasulo
 			{
 				storeBuffer.setQ(0);
 				storeBuffer.setV(result);
+				storeBuffer.vLong = result;
 			}
 			if (storeBuffer.isBusy() && storeBuffer.getQAddress() == tag)
 			{

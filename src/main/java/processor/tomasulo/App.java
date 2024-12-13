@@ -909,9 +909,6 @@ public class App extends Application{
 
 
     public static void main(String[] args) throws IOException {
-    	Memory.storeDouble(24, 2.5);
-    	Memory.storeDouble(16, 3.5);
-    	Memory.storeDouble(8, 4.5);
         launch();
     }
 
