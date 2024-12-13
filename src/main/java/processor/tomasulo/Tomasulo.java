@@ -183,6 +183,7 @@ public class Tomasulo
 			this.executionTime = new SimpleIntegerProperty(0);
 			this.QAddress = new SimpleIntegerProperty(0);
 			this.fillingCache = 0;
+			this.firstExecution = true;
 		}
 
 		// Getter and Setter for busy
